@@ -74,10 +74,12 @@ export default function FeedClient({ userId }: { userId: string }) {
 
   const handleSync = async () => {
     setSyncing(true)
+    setLoading(true)  // 显示加载状态
     try {
       const res = await fetch('/api/sync', { method: 'POST' })
       const result = await res.json()
       console.log('Sync result:', result)
+      // 刷新后重新加载数据
       await loadData()
     } catch (error) {
       console.error('Sync error:', error)
