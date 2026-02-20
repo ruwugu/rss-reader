@@ -27,12 +27,12 @@ interface Article {
 export default function FeedClient({ userId }: { userId: string }) {
   const [feeds, setFeeds] = useState<Feed[]>([])
   const [articles, setArticles] = useState<Article[]>([])
-  const [filter, setFilter] = useState<'all' | 'unread' | 'favorite'>('all')
+  const [filter, setFilter] = useState<'all' | 'unread' | 'favorite' | 'following'>('all')
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null)
   const [showAddFeed, setShowAddFeed] = useState(false)
-  const [newFeed, setNewFeed] = useState({ name: '', twitter_handle: '' })
+  const [newFeed, setNewFeed] = useState({ name: '', twitter_handle: '', rss_url: '' })
   const router = useRouter()
   const supabase = createClient()
 
@@ -128,20 +128,18 @@ export default function FeedClient({ userId }: { userId: string }) {
   }
 
   const addFeed = async () => {
-    if (!newFeed.name || !newFeed.twitter_handle) return
-    
-    const rss_url = `https://rsshub.app/twitter/user/${newFeed.twitter_handle}`
+    if (!newFeed.name || !newFeed.rss_url) return
     
     await supabase.from('feeds').insert({
       user_id: userId,
       name: newFeed.name,
-      twitter_handle: newFeed.twitter_handle,
-      rss_url,
-      avatar_url: `https://ui-avatars.com/api/?name=${newFeed.name}`
+      twitter_handle: newFeed.twitter_handle || newFeed.name.toLowerCase().replace(/\s+/g, '_'),
+      rss_url: newFeed.rss_url,
+      avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(newFeed.name)}&background=random`
     })
 
     setShowAddFeed(false)
-    setNewFeed({ name: '', twitter_handle: '' })
+    setNewFeed({ name: '', twitter_handle: '', rss_url: '' })
     loadData()
   }
 
@@ -206,46 +204,86 @@ export default function FeedClient({ userId }: { userId: string }) {
         >
           收藏
         </button>
+        <button
+          onClick={() => setFilter('following')}
+          className={`px-4 py-1.5 rounded-full text-sm ${
+            filter === 'following' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600'
+          }`}
+        >
+          关注
+        </button>
       </div>
 
-      {/* Article List */}
-      <main className="max-w-2xl mx-auto px-4 py-2 space-y-2">
-        {loading ? (
-          <div className="text-center py-8 text-gray-500">加载中...</div>
-        ) : articles.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">暂无内容</div>
-        ) : (
-          articles.map((article) => (
-            <div
-              key={article.id}
-              onClick={() => setSelectedArticle(article)}
-              className={`bg-white rounded-lg p-4 shadow-sm cursor-pointer hover:shadow-md transition ${
-                !article.is_read ? 'border-l-4 border-blue-500' : ''
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <img
-                  src={article.feed?.avatar_url || ''}
-                  alt={article.feed?.name}
-                  className="w-10 h-10 rounded-full"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-sm">{article.feed?.name}</span>
-                    <span className="text-gray-400 text-xs">
-                      {new Date(article.published_at).toLocaleDateString('zh-CN')}
-                    </span>
+      {filter === 'following' ? (
+        <main className="max-w-2xl mx-auto px-4 py-2">
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <h2 className="font-bold text-lg mb-4">已关注的订阅源</h2>
+            {feeds.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">暂无订阅</p>
+            ) : (
+              <div className="space-y-3">
+                {feeds.map((feed) => (
+                  <div key={feed.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <img
+                      src={feed.avatar_url || ''}
+                      alt={feed.name}
+                      className="w-10 h-10 rounded-full"
+                    />
+                    <div className="flex-1">
+                      <h3 className="font-medium">{feed.name}</h3>
+                      <p className="text-gray-500 text-sm">@{feed.twitter_handle}</p>
+                    </div>
+                    <button
+                      onClick={() => deleteFeed(feed.id)}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </div>
-                  <h3 className="font-medium text-gray-900 line-clamp-2">{article.title}</h3>
-                  <p className="text-gray-500 text-sm mt-1 line-clamp-2">
-                    {article.content_raw?.slice(0, 150)}...
-                  </p>
+                ))}
+              </div>
+            )}
+          </div>
+        </main>
+      ) : (
+        <main className="max-w-2xl mx-auto px-4 py-2 space-y-2">
+          {loading ? (
+            <div className="text-center py-8 text-gray-500">加载中...</div>
+          ) : articles.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">暂无内容</div>
+          ) : (
+            articles.map((article) => (
+              <div
+                key={article.id}
+                onClick={() => setSelectedArticle(article)}
+                className={`bg-white rounded-lg p-4 shadow-sm cursor-pointer hover:shadow-md transition ${
+                  !article.is_read ? 'border-l-4 border-blue-500' : ''
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <img
+                    src={article.feed?.avatar_url || ''}
+                    alt={article.feed?.name}
+                    className="w-10 h-10 rounded-full"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-sm">{article.feed?.name}</span>
+                      <span className="text-gray-400 text-xs">
+                        {new Date(article.published_at).toLocaleDateString('zh-CN')}
+                      </span>
+                    </div>
+                    <h3 className="font-medium text-gray-900 line-clamp-2">{article.title}</h3>
+                    <p className="text-gray-500 text-sm mt-1 line-clamp-2">
+                      {article.content_raw?.slice(0, 150)}...
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
-        )}
-      </main>
+            ))
+          )}
+        </main>
+      )}
 
       {/* Add Feed Modal */}
       {showAddFeed && (
@@ -253,13 +291,19 @@ export default function FeedClient({ userId }: { userId: string }) {
           <div className="bg-white rounded-xl p-6 w-full max-w-sm">
             <h2 className="text-lg font-bold mb-4">添加订阅</h2>
             <input
-              placeholder="达人名字"
+              placeholder="名称（如：Hacker News）"
               value={newFeed.name}
               onChange={(e) => setNewFeed({ ...newFeed, name: e.target.value })}
               className="w-full border rounded-lg px-4 py-2 mb-3"
             />
             <input
-              placeholder="Twitter handle (不含@)"
+              placeholder="RSS 地址（如：https://hnrss.org/best）"
+              value={newFeed.rss_url}
+              onChange={(e) => setNewFeed({ ...newFeed, rss_url: e.target.value })}
+              className="w-full border rounded-lg px-4 py-2 mb-3"
+            />
+            <input
+              placeholder="Twitter handle（可选，不填则用名称）"
               value={newFeed.twitter_handle}
               onChange={(e) => setNewFeed({ ...newFeed, twitter_handle: e.target.value })}
               className="w-full border rounded-lg px-4 py-2 mb-4"
