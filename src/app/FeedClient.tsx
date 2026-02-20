@@ -74,9 +74,14 @@ export default function FeedClient({ userId }: { userId: string }) {
 
   const handleSync = async () => {
     setSyncing(true)
-    // 简化版：只是刷新数据
-    // 实际应该调用 RSSHub API 抓取新内容
-    await loadData()
+    try {
+      const res = await fetch('/api/sync', { method: 'POST' })
+      const result = await res.json()
+      console.log('Sync result:', result)
+      await loadData()
+    } catch (error) {
+      console.error('Sync error:', error)
+    }
     setSyncing(false)
   }
 
@@ -99,6 +104,27 @@ export default function FeedClient({ userId }: { userId: string }) {
       .update({ is_favorite: !article.is_favorite })
       .eq('id', article.id)
     loadData()
+  }
+
+  const translateArticle = async (articleId: string) => {
+    try {
+      const res = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ articleId })
+      })
+      const result = await res.json()
+      if (result.translated) {
+        // 更新当前选中的文章
+        if (selectedArticle && selectedArticle.id === articleId) {
+          setSelectedArticle({ ...selectedArticle, content_zh: result.translated })
+        }
+        // 刷新列表
+        loadData()
+      }
+    } catch (error) {
+      console.error('Translate error:', error)
+    }
   }
 
   const addFeed = async () => {
@@ -269,6 +295,14 @@ export default function FeedClient({ userId }: { userId: string }) {
                 ← 返回
               </button>
               <div className="flex gap-2">
+                {!selectedArticle.content_zh && (
+                  <button
+                    onClick={() => translateArticle(selectedArticle.id)}
+                    className="px-3 py-1 text-sm bg-blue-100 text-blue-600 rounded-lg"
+                  >
+                    翻译
+                  </button>
+                )}
                 <button
                   onClick={() => toggleRead(selectedArticle)}
                   className="p-2 hover:bg-gray-100 rounded-lg"
