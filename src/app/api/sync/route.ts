@@ -22,38 +22,81 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // 获取用户的所有 feeds
-  const { data: feeds } = await supabase
-    .from('feeds')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('is_active', true)
+  // RSS 源配置
+  const RSS_SOURCES = [
+    {
+      name: 'Hacker News Best',
+      url: 'https://hnrss.org/best',
+      avatar: 'https://news.ycombinator.com/y18.svg'
+    },
+    {
+      name: 'Hacker News New',
+      url: 'https://hnrss.org/newest',
+      avatar: 'https://news.ycombinator.com/y18.svg'
+    },
+    {
+      name: 'TechCrunch',
+      url: 'https://techcrunch.com/feed/',
+      avatar: 'https://techcrunch.com/wp-content/uploads/2015/02/cropped-cropped-favicon-gradient.png'
+    },
+    {
+      name: 'MIT Tech Review',
+      url: 'https://www.technologyreview.com/feed/',
+      avatar: 'https://www.technologyreview.com/favicon.ico'
+    }
+  ]
 
   const parser = new Parser()
   let newArticlesCount = 0
 
-  for (const feed of feeds || []) {
+  for (const source of RSS_SOURCES) {
     try {
-      // 从 RSSHub 获取 RSS
-      const rss = await parser.parseURL(feed.rss_url)
+      // 检查订阅源是否已存在
+      let { data: feed } = await supabase
+        .from('feeds')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('rss_url', source.url)
+        .single()
+
+      // 如果不存在，创建订阅源
+      if (!feed) {
+        const { data: newFeed } = await supabase
+          .from('feeds')
+          .insert({
+            user_id: user.id,
+            name: source.name,
+            twitter_handle: source.name.toLowerCase().replace(/\s+/g, '_'),
+            rss_url: source.url,
+            avatar_url: source.avatar,
+            is_active: true
+          })
+          .select()
+          .single()
+        feed = newFeed
+      }
+
+      if (!feed) continue
+
+      // 拉取 RSS
+      const rss = await parser.parseURL(source.url)
       
       for (const item of rss.items || []) {
+        const url = item.link || `hn-${item.guid || Math.random()}`
+        
         // 检查是否已存在
         const { data: existing } = await supabase
           .from('articles')
           .select('id')
           .eq('user_id', user.id)
-          .eq('url', item.link || '')
+          .eq('url', url)
           .single()
 
         if (!existing) {
-          // 提取内容
           const content = item.content || item.contentSnippet || item.summary || ''
           const title = item.title || '无标题'
-          const url = item.link || ''
           const publishedAt = item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString()
 
-          // 插入文章
           await supabase.from('articles').insert({
             feed_id: feed.id,
             user_id: user.id,
@@ -66,7 +109,7 @@ export async function POST(request: Request) {
         }
       }
     } catch (error) {
-      console.error(`Error fetching ${feed.name}:`, error)
+      console.error(`Error fetching ${source.name}:`, error)
     }
   }
 
