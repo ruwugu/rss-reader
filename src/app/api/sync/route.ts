@@ -22,10 +22,10 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // RSS 源配置
+  // AI 相关 RSS 订阅源
   const RSS_SOURCES = [
     {
-      name: 'Hacker News Best',
+      name: 'Hacker News',
       url: 'https://hnrss.org/best',
       avatar: 'https://news.ycombinator.com/y18.svg'
     },
@@ -37,12 +37,32 @@ export async function POST(request: Request) {
     {
       name: 'TechCrunch',
       url: 'https://techcrunch.com/feed/',
-      avatar: 'https://techcrunch.com/wp-content/uploads/2015/02/cropped-cropped-favicon-gradient.png'
+      avatar: 'https://techcrunch.com/wp-content/uploads/2015/02/cropped-favicon-gradient.png'
     },
     {
-      name: 'MIT Tech Review',
+      name: 'MIT Technology Review',
       url: 'https://www.technologyreview.com/feed/',
       avatar: 'https://www.technologyreview.com/favicon.ico'
+    },
+    {
+      name: 'Wired',
+      url: 'https://www.wired.com/feed/rss',
+      avatar: 'https://www.wired.com/favicon.ico'
+    },
+    {
+      name: 'OpenAI Blog',
+      url: 'https://openai.com/blog/rss.xml',
+      avatar: 'https://openai.com/favicon.ico'
+    },
+    {
+      name: 'DeepLearning.AI',
+      url: 'https://www.deeplearning.ai/feed/',
+      avatar: 'https://www.deeplearning.ai/favicon.ico'
+    },
+    {
+      name: 'AI News',
+      url: 'https://AINews.com/rss',
+      avatar: 'https://AINews.com/favicon.ico'
     }
   ]
 
@@ -82,7 +102,7 @@ export async function POST(request: Request) {
       const rss = await parser.parseURL(source.url)
       
       for (const item of rss.items || []) {
-        const url = item.link || `hn-${item.guid || Math.random()}`
+        const url = item.link || `feed-${item.guid || Math.random()}`
         
         // 检查是否已存在
         const { data: existing } = await supabase
