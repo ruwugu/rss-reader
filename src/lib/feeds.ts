@@ -1,3 +1,12 @@
+import { createBrowserClient } from '@supabase/ssr'
+
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
+
 // 预定义的 AI 相关 RSS 订阅源
 export const AVAILABLE_FEEDS = [
   {
@@ -38,7 +47,7 @@ export const AVAILABLE_FEEDS = [
     twitter_handle: 'wired',
     url: 'https://www.wired.com/feed/rss',
     avatar: 'https://www.wired.com/favicon.ico',
-    description: ' Wired 科技'
+    description: 'Wired 科技'
   },
   {
     id: 'openai-blog',
