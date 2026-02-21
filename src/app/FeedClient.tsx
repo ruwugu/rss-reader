@@ -219,8 +219,12 @@ export default function FeedClient({ userId }: { userId: string }) {
         is_active: true
       })
     }
-    // 刷新数据
-    await loadData()
+    // 强制刷新数据
+    const { data: feedsData } = await supabase
+      .from('feeds')
+      .select('*')
+      .eq('user_id', userId)
+    if (feedsData) setFeeds(feedsData)
   }
 
   const deleteFeed = async (feedId: string) => {
@@ -235,7 +239,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-900">02210926</span>
+            <span className="text-xs text-gray-900">02210934</span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -287,54 +291,15 @@ export default function FeedClient({ userId }: { userId: string }) {
         >
           收藏
         </button>
-        <button
-          onClick={() => setFilter('following')}
-          className={`px-4 py-1.5 rounded-full text-sm ${
-            filter === 'following' ? 'bg-blue-600 text-white' : 'bg-white text-gray-900'
-          }`}
-        >
-          关注
-        </button>
       </div>
 
-      {filter === 'following' ? (
-        <main className="max-w-2xl mx-auto px-4 py-2">
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <h2 className="font-bold text-lg mb-4">已关注的订阅源</h2>
-            {feeds.length === 0 ? (
-              <p className="text-gray-900 text-center py-8">暂无订阅</p>
-            ) : (
-              <div className="space-y-3">
-                {feeds.map((feed) => (
-                  <div key={feed.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <img
-                      src={feed.avatar_url || ''}
-                      alt={feed.name}
-                      className="w-10 h-10 rounded-full"
-                    />
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{feed.name}</h3>
-                      <p className="text-gray-900 text-sm">@{feed.twitter_handle}</p>
-                    </div>
-                    <button
-                      onClick={() => deleteFeed(feed.id)}
-                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </main>
-      ) : (
-        <main className="max-w-2xl mx-auto px-4 py-2 space-y-2">
-          {loading ? (
-            <div className="text-center py-8 text-gray-900">加载中...</div>
-          ) : articles.length === 0 ? (
-            <div className="text-center py-8 text-gray-900">暂无内容</div>
-          ) : (
+      {/* Article List */}
+      <main className="max-w-2xl mx-auto px-4 py-2 space-y-2">
+        {loading ? (
+          <div className="text-center py-8 text-gray-900">加载中...</div>
+        ) : articles.length === 0 ? (
+          <div className="text-center py-8 text-gray-900">暂无内容</div>
+        ) : (
             articles.map((article) => (
               <div
                 key={article.id}
@@ -366,7 +331,6 @@ export default function FeedClient({ userId }: { userId: string }) {
             ))
           )}
         </main>
-      )}
 
       {/* Add Feed Modal */}
       {showAddFeed && (
