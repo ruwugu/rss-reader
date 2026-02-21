@@ -12,6 +12,20 @@ interface Feed {
   avatar_url: string
 }
 
+// 解码 HTML 实体
+function decodeHtml(html: string) {
+  return html
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#\d+/g, (match) => {
+      return String.fromCharCode(parseInt(match.replace('&#', '')))
+    })
+}
+
 interface Article {
   id: string
   title: string
@@ -164,7 +178,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-900">02210841</span>
+            <span className="text-xs text-gray-900">02210847</span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -288,9 +302,9 @@ export default function FeedClient({ userId }: { userId: string }) {
                         {new Date(article.published_at).toLocaleDateString('zh-CN')}
                       </span>
                     </div>
-                    <h3 className="font-medium text-gray-900 line-clamp-2">{article.title}</h3>
+                    <h3 className="font-medium text-gray-900 line-clamp-2">{decodeHtml(article.title)}</h3>
                     <p className="text-gray-900 text-sm mt-1 line-clamp-2">
-                      {article.content_raw?.slice(0, 150)}...
+                      {decodeHtml(article.content_raw || '').slice(0, 150)}...
                     </p>
                   </div>
                 </div>
@@ -393,19 +407,19 @@ export default function FeedClient({ userId }: { userId: string }) {
                 </div>
               </div>
 
-              <h1 className="text-xl font-bold text-gray-900 mb-6">{selectedArticle.title}</h1>
+              <h1 className="text-xl font-bold text-gray-900 mb-6">{decodeHtml(selectedArticle.title)}</h1>
 
               {/* Bilingual Content */}
               <div className="space-y-6">
                 {selectedArticle.content_raw ? (
                   <>
                     <div className="space-y-4">
-                      {selectedArticle.content_raw.split('\n\n').map((para, i) => (
+                      {decodeHtml(selectedArticle.content_raw).split('\n\n').map((para: string, i: number) => (
                         <div key={i}>
                           <p className="text-gray-900 leading-relaxed">{para}</p>
-                          {selectedArticle.content_zh && selectedArticle.content_zh.split('\n\n')[i] && (
+                          {selectedArticle.content_zh && decodeHtml(selectedArticle.content_zh).split('\n\n')[i] && (
                             <p className="text-gray-900 leading-relaxed mt-2 italic">
-                              {selectedArticle.content_zh.split('\n\n')[i]}
+                              {decodeHtml(selectedArticle.content_zh).split('\n\n')[i]}
                             </p>
                           )}
                         </div>
