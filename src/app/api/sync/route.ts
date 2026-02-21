@@ -3,7 +3,6 @@ import { cookies } from 'next/headers'
 import Parser from 'rss-parser'
 
 export const dynamic = 'force-dynamic'
-export const fetchCache = 'no-store'
 
 export async function POST(request: Request) {
   const cookieStore = await cookies()
