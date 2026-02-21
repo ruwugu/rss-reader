@@ -122,12 +122,20 @@ export default function FeedClient({ userId }: { userId: string }) {
     setTogglingFeed(feed.id)
     try {
       const existing = feeds.find(f => f.rss_url === feed.url)
+      let error = null
       if (existing) {
-        await supabase.from('feeds').update({ is_active: false }).eq('id', existing.id)
+        const result = await supabase.from('feeds').update({ is_active: false }).eq('id', existing.id)
+        error = result.error
       } else {
-        await supabase.from('feeds').insert({ user_id: userId, name: feed.name, twitter_handle: feed.twitter_handle, rss_url: feed.url, avatar_url: feed.avatar, is_active: true })
+        const result = await supabase.from('feeds').insert({ user_id: userId, name: feed.name, twitter_handle: feed.twitter_handle, rss_url: feed.url, avatar_url: feed.avatar, is_active: true })
+        error = result.error
       }
-      await loadData()
+      if (error) {
+        console.error('Supabase error:', error)
+        alert('操作失败: ' + error.message)
+      } else {
+        await loadData()
+      }
     } catch (err) {
       console.error('Toggle feed error:', err)
     } finally {
@@ -141,7 +149,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-900">02212208</span>
+            <span className="text-xs text-gray-900">02212210</span>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowManageFeed(true)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-900"><Plus size={20} /></button>
