@@ -149,7 +149,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-900">02212210</span>
+            <span className="text-xs text-gray-900">02212256</span>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowManageFeed(true)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-900"><Plus size={20} /></button>
@@ -188,7 +188,7 @@ export default function FeedClient({ userId }: { userId: string }) {
           <div className="min-h-screen max-w-2xl mx-auto bg-white">
             <div className="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between">
               <h2 className="text-lg font-bold text-gray-900">管理订阅</h2>
-              <button onClick={() => setShowManageFeed(false)} className="text-gray-900 text-xl">×</button>
+              <button onClick={() => setShowManageFeed(false)} className="p-1 text-gray-500 hover:text-gray-700 text-2xl leading-none">×</button>
             </div>
             <div className="p-4 space-y-2">
               {AVAILABLE_FEEDS.map(feed => {
@@ -203,8 +203,8 @@ export default function FeedClient({ userId }: { userId: string }) {
                     <button 
                       onClick={() => toggleFeed(feed)} 
                       disabled={togglingFeed === feed.id}
-                      className={`relative w-12 h-7 rounded-full transition-colors ${isOn ? 'bg-green-500' : 'bg-gray-300'} ${togglingFeed === feed.id ? 'opacity-50' : ''}`}>
-                      <span className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${isOn ? 'translate-x-6' : 'translate-x-1'}`} />
+                      className={`relative inline-flex items-center h-7 w-12 rounded-full transition-colors flex-shrink-0 ${isOn ? 'bg-green-500' : 'bg-gray-300'} ${togglingFeed === feed.id ? 'opacity-50' : ''}`}>
+                      <span className={`inline-block w-5 h-5 bg-white rounded-full shadow transform transition-transform ${isOn ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
                   </div>
                 )
