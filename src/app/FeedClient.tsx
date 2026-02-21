@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { BookOpen, Star, Check, LogOut, Plus, RefreshCw, Trash2 } from 'lucide-react'
+import { AVAILABLE_FEEDS } from '@/lib/feeds'
 
 interface Feed {
   id: string
   name: string
   twitter_handle: string
   avatar_url: string
+  rss_url?: string
 }
 
 // 解码 HTML 实体
@@ -80,7 +82,6 @@ export default function FeedClient({ userId }: { userId: string }) {
   const [selectedArticleLocal, setSelectedArticleLocal] = useState<{is_read: boolean, is_favorite: boolean, content_zh?: string} | null>(null)
   const [translatingId, setTranslatingId] = useState<string | null>(null)
   const [showAddFeed, setShowAddFeed] = useState(false)
-  const [newFeed, setNewFeed] = useState({ name: '', twitter_handle: '', rss_url: '' })
   const router = useRouter()
   const supabase = createClient()
 
@@ -197,19 +198,25 @@ export default function FeedClient({ userId }: { userId: string }) {
     }
   }
 
-  const addFeed = async () => {
-    if (!newFeed.name || !newFeed.rss_url) return
+  // 切换订阅源开关
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const toggleFeed = async (feed: any) => {
+    const existingFeed = feeds.find((f: any) => f.rss_url === feed.url)
     
-    await supabase.from('feeds').insert({
-      user_id: userId,
-      name: newFeed.name,
-      twitter_handle: newFeed.twitter_handle || newFeed.name.toLowerCase().replace(/\s+/g, '_'),
-      rss_url: newFeed.rss_url,
-      avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(newFeed.name)}&background=random`
-    })
-
-    setShowAddFeed(false)
-    setNewFeed({ name: '', twitter_handle: '', rss_url: '' })
+    if (existingFeed) {
+      // 已存在，删除
+      await supabase.from('feeds').delete().eq('id', existingFeed.id)
+    } else {
+      // 不存在，添加
+      await supabase.from('feeds').insert({
+        user_id: userId,
+        name: feed.name,
+        twitter_handle: feed.twitter_handle,
+        rss_url: feed.url,
+        avatar_url: feed.avatar,
+        is_active: true
+      })
+    }
     loadData()
   }
 
@@ -225,7 +232,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-900">02210910</span>
+            <span className="text-xs text-gray-900">02210918</span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -360,40 +367,47 @@ export default function FeedClient({ userId }: { userId: string }) {
 
       {/* Add Feed Modal */}
       {showAddFeed && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-sm">
-            <h2 className="text-lg font-bold mb-4">添加订阅</h2>
-            <input
-              placeholder="名称（如：Hacker News）"
-              value={newFeed.name}
-              onChange={(e) => setNewFeed({ ...newFeed, name: e.target.value })}
-              className="w-full border rounded-lg px-4 py-2 mb-3 placeholder:text-gray-500"
-            />
-            <input
-              placeholder="RSS 地址（如：https://hnrss.org/best）"
-              value={newFeed.rss_url}
-              onChange={(e) => setNewFeed({ ...newFeed, rss_url: e.target.value })}
-              className="w-full border rounded-lg px-4 py-2 mb-3 placeholder:text-gray-500"
-            />
-            <input
-              placeholder="Twitter handle（可选，不填则用名称）"
-              value={newFeed.twitter_handle}
-              onChange={(e) => setNewFeed({ ...newFeed, twitter_handle: e.target.value })}
-              className="w-full border rounded-lg px-4 py-2 mb-4 placeholder:text-gray-500"
-            />
-            <div className="flex gap-2">
+        <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto">
+          <div className="min-h-screen max-w-2xl mx-auto bg-white">
+            <div className="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-900">管理订阅</h2>
               <button
                 onClick={() => setShowAddFeed(false)}
-                className="flex-1 py-2 border rounded-lg"
+                className="text-gray-900 text-xl"
               >
-                取消
+                ×
               </button>
-              <button
-                onClick={addFeed}
-                className="flex-1 py-2 bg-blue-600 text-white rounded-lg"
-              >
-                添加
-              </button>
+            </div>
+            <div className="p-4 space-y-2">
+              {AVAILABLE_FEEDS.map((feed) => {
+                const isEnabled = feeds.some((f: any) => f.rss_url === feed.url)
+                return (
+                  <div
+                    key={feed.id}
+                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                  >
+                    <img
+                      src={feed.avatar}
+                      alt={feed.name}
+                      className="w-10 h-10 rounded-full"
+                    />
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900">{feed.name}</h3>
+                      <p className="text-gray-600 text-xs">{feed.description}</p>
+                    </div>
+                    <button
+                      onClick={() => toggleFeed(feed)}
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        isEnabled
+                          ? 'bg-green-100 text-green-600'
+                          : 'bg-gray-200 text-gray-600'
+                      }`}
+                    >
+                      {isEnabled ? '已开启' : '未开启'}
+                    </button>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>
