@@ -163,8 +163,8 @@ export default function FeedClient({ userId }: { userId: string }) {
       <header className="bg-white shadow-sm sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h1 className="text-lg font-bold">AI RSS</h1>
-            <span className="text-xs text-gray-900">02210833</span>
+            <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
+            <span className="text-xs text-gray-900">02210836</span>
           </div>
           <div className="flex items-center gap-2">
             <button
