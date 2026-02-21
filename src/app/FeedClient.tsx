@@ -93,6 +93,8 @@ export default function FeedClient({ userId }: { userId: string }) {
       const res = await fetch('/api/sync', { method: 'POST' })
       const result = await res.json()
       console.log('Sync result:', result)
+      // 强制刷新页面
+      router.refresh()
       await loadData()
     } catch (err) {
       console.error('Sync error:', err)
@@ -165,7 +167,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-900">02212315</span>
+            <span className="text-xs text-gray-900">02212320</span>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowManageFeed(true)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-900"><Plus size={20} /></button>
