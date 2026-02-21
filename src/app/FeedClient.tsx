@@ -14,16 +14,42 @@ interface Feed {
 
 // 解码 HTML 实体
 function decodeHtml(html: string) {
+  if (!html) return ''
   return html
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
     .replace(/&#39;/g, "'")
-    .replace(/&#\d+/g, (match) => {
-      return String.fromCharCode(parseInt(match.replace('&#', '')))
+    .replace(/&#x27;/g, "'")
+    .replace(/&#x2F;/g, '/')
+    .replace(/&hellip;/g, '...')
+    .replace(/&mdash;/g, '--')
+    .replace(/&ndash;/g, '-')
+    .replace(/&shy;/g, '')
+    .replace(/&copy;/g, '(c)')
+    .replace(/&reg;/g, '(R)')
+    .replace(/&trade;/g, '(TM)')
+    .replace(/&#\d+;/g, (match) => {
+      try {
+        return String.fromCharCode(parseInt(match.replace(/[&#;]/g, '')))
+      } catch {
+        return ''
+      }
     })
+    .replace(/&#x[0-9a-fA-F]+;/g, (match) => {
+      try {
+        return String.fromCharCode(parseInt(match.replace(/[#x;]/g, ''), 16))
+      } catch {
+        return ''
+      }
+    })
+    // 清理多余的分号和奇怪字符
+    .replace(/;+/g, ';')
+    .replace(/;\s*/g, '; ')
+    .trim()
 }
 
 interface Article {
@@ -178,7 +204,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-900">02210847</span>
+            <span className="text-xs text-gray-900">02210851</span>
           </div>
           <div className="flex items-center gap-2">
             <button
