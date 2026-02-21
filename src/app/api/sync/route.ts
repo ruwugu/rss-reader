@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       try {
         // 拉取 RSS，设置超时
         const controller = new AbortController()
-        const timeout = setTimeout(() => controller.abort(), 8000)
+        const timeout = setTimeout(() => controller.abort(), 60000)
         
         const rss = await parser.parseURL(feed.rss_url)
         clearTimeout(timeout)
