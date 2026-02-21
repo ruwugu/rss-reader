@@ -18,7 +18,7 @@ const AVAILABLE_FEEDS = [
   { id: 'openai', name: 'OpenAI Blog', twitter_handle: 'openai', url: 'https://openai.com/blog/rss.xml', avatar: 'https://openai.com/favicon.ico', description: 'OpenAI官方' },
   { id: 'anthropic', name: 'Anthropic', twitter_handle: 'anthropic', url: 'https://www.anthropic.com/rss/blog', avatar: 'https://www.anthropic.com/favicon.ico', description: 'Anthropic官方' },
   { id: 'google-ai', name: 'Google AI', twitter_handle: 'googleai', url: 'https://blog.google/technology/ai/rss', avatar: 'https://www.google.com/favicon.ico', description: 'Google AI' },
-  { id: 'karpathy', name: 'Andrej Karpathy', twitter_handle: 'karpathy', url: 'https://rsshub.app/twitter/user/karpathy', avatar: 'https://pbs.twimg.com/profile_images/1594489848945246208/-KlJjV35_400x400.jpg', description: 'Karpathy X' },
+  { id: 'karpathy', name: 'Andrej Karpathy', twitter_handle: 'karpathy', url: 'https://diygod-rsshub.vercel.app/twitter/user/karpathy', avatar: 'https://pbs.twimg.com/profile_images/1594489848945246208/-KlJjV35_400x400.jpg', description: 'Karpathy X' },
 ]
 
 function decodeHtml(html: string) {
@@ -169,7 +169,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-900">02220022</span>
+            <span className="text-xs text-gray-900">02220030</span>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowManageFeed(true)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-900"><Plus size={20} /></button>
