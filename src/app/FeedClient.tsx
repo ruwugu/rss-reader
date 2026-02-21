@@ -90,14 +90,34 @@ export default function FeedClient({ userId }: { userId: string }) {
     setSyncing(true)
     setLoading(true)
     try {
-      const res = await fetch('/api/sync', { method: 'POST' })
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 30000)
+      
+      const res = await fetch('/api/sync', { 
+        method: 'POST',
+        signal: controller.signal
+      })
+      clearTimeout(timeout)
+      
       const result = await res.json()
       console.log('Sync result:', result)
-      // 强制刷新页面
+      
       router.refresh()
       await loadData()
-    } catch (err) {
+      
+      // 显示结果
+      if (result.newArticlesCount > 0) {
+        alert(`抓取完成，新增 ${result.newArticlesCount} 篇文章`)
+      } else if (result.message) {
+        alert(result.message)
+      }
+    } catch (err: any) {
       console.error('Sync error:', err)
+      if (err.name === 'AbortError') {
+        alert('抓取超时，请重试')
+      } else {
+        alert('抓取失败: ' + err.message)
+      }
     } finally {
       setSyncing(false)
       setLoading(false)
@@ -167,7 +187,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-900">02212320</span>
+            <span className="text-xs text-gray-900">02212330</span>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowManageFeed(true)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-900"><Plus size={20} /></button>
