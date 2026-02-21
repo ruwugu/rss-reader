@@ -164,7 +164,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-900">02210838</span>
+            <span className="text-xs text-gray-900">02210841</span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -386,14 +386,14 @@ export default function FeedClient({ userId }: { userId: string }) {
                   className="w-12 h-12 rounded-full"
                 />
                 <div>
-                  <h2 className="font-bold">{selectedArticle.feed?.name}</h2>
+                  <h2 className="font-bold text-gray-900">{selectedArticle.feed?.name}</h2>
                   <p className="text-gray-900 text-sm">
                     @{selectedArticle.feed?.twitter_handle} · {new Date(selectedArticle.published_at).toLocaleString('zh-CN')}
                   </p>
                 </div>
               </div>
 
-              <h1 className="text-xl font-bold mb-6">{selectedArticle.title}</h1>
+              <h1 className="text-xl font-bold text-gray-900 mb-6">{selectedArticle.title}</h1>
 
               {/* Bilingual Content */}
               <div className="space-y-6">
