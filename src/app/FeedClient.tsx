@@ -16,6 +16,9 @@ interface Feed {
 function decodeHtml(html: string) {
   if (!html) return ''
   return html
+    // 先移除所有 HTML 标签
+    .replace(/<[^>]+>/g, ' ')
+    // 解码常见 HTML 实体
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
@@ -46,9 +49,12 @@ function decodeHtml(html: string) {
         return ''
       }
     })
-    // 清理多余的分号和奇怪字符
+    // 清理所有剩余的 HTML 实体
+    .replace(/&[a-z]+;/gi, ' ')
+    // 清理各种奇怪字符
     .replace(/;+/g, ';')
     .replace(/;\s*/g, '; ')
+    .replace(/\s+/g, ' ')
     .trim()
 }
 
@@ -204,7 +210,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-900">02210851</span>
+            <span className="text-xs text-gray-900">02210854</span>
           </div>
           <div className="flex items-center gap-2">
             <button
