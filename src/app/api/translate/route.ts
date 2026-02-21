@@ -1,9 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-const MINIMAX_API_KEY = process.env.MINIMAX_API_KEY
-const MINIMAX_BASE_URL = 'https://api.minimaxi.com/v1'
-
 export async function POST(request: Request) {
   const cookieStore = await cookies()
   
@@ -38,52 +35,63 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Article not found' }, { status: 404 })
   }
 
+  // 如果已经有翻译，直接返回
   if (article.content_zh) {
     return Response.json({ success: true, translated: article.content_zh })
   }
 
-  if (!MINIMAX_API_KEY) {
-    return Response.json({ error: 'Translation API not configured' }, { status: 500 })
+  // 获取原始内容并清理 HTML
+  const rawContent = article.content_raw || ''
+  const cleanContent = rawContent
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#\d+;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  if (!cleanContent) {
+    return Response.json({ error: 'No content to translate' }, { status: 400 })
   }
 
   try {
-    // 使用 MiniMax 进行翻译
-    const response = await fetch(`${MINIMAX_BASE_URL}/text/chatcompletion_v2`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${MINIMAX_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'MiniMax-Text-01',
-        messages: [
-          {
-            role: 'system',
-            content: '你是一个专业的AI技术论文翻译助手。请将以下英文内容翻译成中文，要求：1. 保持专业术语的准确性 2. 理解上下文，保持连贯性 3. 翻译结果要自然流畅，符合中文阅读习惯 4. 保留原文中的代码、链接等格式 5. 直接输出翻译结果，不要有任何前缀或解释'
-          },
-          {
-            role: 'user',
-            content: article.content_raw || ''
-          }
-        ]
-      })
-    })
+    // 使用免费 MyMemory API 翻译
+    // 为了处理长文本，我们分段翻译
+    const paragraphs = cleanContent.split('\n\n').filter((p: string) => p.trim())
+    const translatedParagraphs: string[] = []
 
-    const data = await response.json()
-    
-    if (data.choices && data.choices[0]) {
-      const translatedText = data.choices[0].message.content
+    for (const para of paragraphs) {
+      // 每段限制在 500 字符以内（API 限制）
+      const truncatedPara = para.slice(0, 500)
       
-      // 保存翻译结果
-      await supabase
-        .from('articles')
-        .update({ content_zh: translatedText })
-        .eq('id', articleId)
-
-      return Response.json({ success: true, translated: translatedText })
-    } else {
-      return Response.json({ error: 'Translation failed' }, { status: 500 })
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(truncatedPara)}&langpair=en|zh`
+      
+      const response = await fetch(url)
+      const data = await response.json()
+      
+      if (data.responseStatus === 200 && data.responseData) {
+        translatedParagraphs.push(data.responseData.translatedText)
+      } else {
+        // 如果翻译失败，保留原文
+        translatedParagraphs.push(truncatedPara)
+      }
+      
+      // 避免请求过快
+      await new Promise(resolve => setTimeout(resolve, 300))
     }
+
+    const translatedText = translatedParagraphs.join('\n\n')
+    
+    // 保存翻译结果到数据库
+    await supabase
+      .from('articles')
+      .update({ content_zh: translatedText })
+      .eq('id', articleId)
+
+    return Response.json({ success: true, translated: translatedText })
   } catch (error) {
     console.error('Translation error:', error)
     return Response.json({ error: 'Translation failed' }, { status: 500 })
