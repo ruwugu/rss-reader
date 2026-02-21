@@ -37,10 +37,23 @@ export async function POST(request: Request) {
 
   const parser = new Parser({ timeout: 5000 })
   let newArticlesCount = 0
+  let feedsProcessed = 0
 
   try {
     for (const feed of activeFeeds) {
       try {
+        // 获取该订阅源最近一次抓取的文章时间
+        const { data: latestArticle } = await supabase
+          .from('articles')
+          .select('published_at')
+          .eq('feed_id', feed.id)
+          .eq('user_id', user.id)
+          .order('published_at', { ascending: false })
+          .limit(1)
+          .single()
+        
+        const lastSyncTime = latestArticle?.published_at ? new Date(latestArticle.published_at).getTime() : 0
+        
         // 拉取 RSS，设置超时
         const controller = new AbortController()
         const timeout = setTimeout(() => controller.abort(), 60000)
@@ -50,10 +63,16 @@ export async function POST(request: Request) {
         
         if (!rss.items) continue
         
+        let feedNewCount = 0
         for (const item of rss.items) {
+          const itemTime = item.pubDate ? new Date(item.pubDate).getTime() : 0
+          
+          // 只抓取最近一次抓取之后的新内容
+          if (itemTime <= lastSyncTime) continue
+          
           const url = item.link || `feed-${item.guid || Math.random()}`
           
-          // 检查是否已存在
+          // 检查是否已存在（双重保险：URL和时间都相同才跳过）
           const { data: existing } = await supabase
             .from('articles')
             .select('id')
@@ -75,8 +94,12 @@ export async function POST(request: Request) {
               published_at: publishedAt,
             })
             newArticlesCount++
+            feedNewCount++
           }
         }
+        
+        feedsProcessed++
+        console.log(`Feed ${feed.name}: ${feedNewCount} new articles`)
       } catch (feedError) {
         console.error(`Error fetching ${feed.name}:`, feedError)
         // 继续处理下一个 feed
@@ -87,5 +110,5 @@ export async function POST(request: Request) {
     return Response.json({ success: false, error: String(error) }, { status: 500 })
   }
 
-  return Response.json({ success: true, newArticlesCount })
+  return Response.json({ success: true, newArticlesCount, feedsProcessed })
 }
