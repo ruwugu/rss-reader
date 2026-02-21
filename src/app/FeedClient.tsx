@@ -203,30 +203,38 @@ export default function FeedClient({ userId }: { userId: string }) {
   // 切换订阅源开关
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const toggleFeed = async (feed: any) => {
-    // 先查询所有 feeds（包括关闭的）
-    const { data: allFeeds } = await supabase
-      .from('feeds')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('rss_url', feed.url)
-      .single()
-    
-    if (allFeeds) {
-      // 已存在，切换状态
-      await supabase.from('feeds').update({ is_active: !allFeeds.is_active }).eq('id', allFeeds.id)
-    } else {
-      // 不存在，添加
-      await supabase.from('feeds').insert({
-        user_id: userId,
-        name: feed.name,
-        twitter_handle: feed.twitter_handle,
-        rss_url: feed.url,
-        avatar_url: feed.avatar,
-        is_active: true
-      })
+    try {
+      // 先查询所有 feeds（包括关闭的）
+      const { data: existingFeeds } = await supabase
+        .from('feeds')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('rss_url', feed.url)
+      
+      if (existingFeeds && existingFeeds.length > 0) {
+        const existingFeed = existingFeeds[0]
+        // 已存在，切换状态
+        const newStatus = !existingFeed.is_active
+        await supabase.from('feeds').update({ is_active: newStatus }).eq('id', existingFeed.id)
+        console.log('Toggled feed:', feed.name, 'to', newStatus)
+      } else {
+        // 不存在，添加
+        await supabase.from('feeds').insert({
+          user_id: userId,
+          name: feed.name,
+          twitter_handle: feed.twitter_handle,
+          rss_url: feed.url,
+          avatar_url: feed.avatar,
+          is_active: true
+        })
+        console.log('Added feed:', feed.name)
+      }
+      // 刷新数据
+      await loadData()
+    } catch (error) {
+      console.error('Toggle feed error:', error)
     }
-    // 刷新数据
-    await loadData()
+  }
   }
 
   const deleteFeed = async (feedId: string) => {
@@ -241,7 +249,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-900">02210934</span>
+            <span className="text-xs text-gray-900">02210944</span>
           </div>
           <div className="flex items-center gap-2">
             <button
