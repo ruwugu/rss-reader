@@ -31,6 +31,7 @@ export default function FeedClient({ userId }: { userId: string }) {
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null)
+  const [selectedArticleLocal, setSelectedArticleLocal] = useState<{is_read: boolean, is_favorite: boolean} | null>(null)
   const [showAddFeed, setShowAddFeed] = useState(false)
   const [newFeed, setNewFeed] = useState({ name: '', twitter_handle: '', rss_url: '' })
   const router = useRouter()
@@ -93,6 +94,9 @@ export default function FeedClient({ userId }: { userId: string }) {
   }
 
   const toggleRead = async (article: Article) => {
+    // 立即更新本地状态
+    setSelectedArticleLocal(prev => prev ? { ...prev, is_read: !prev.is_read } : null)
+    // 异步更新服务器
     await supabase
       .from('articles')
       .update({ is_read: !article.is_read })
@@ -101,6 +105,9 @@ export default function FeedClient({ userId }: { userId: string }) {
   }
 
   const toggleFavorite = async (article: Article) => {
+    // 立即更新本地状态
+    setSelectedArticleLocal(prev => prev ? { ...prev, is_favorite: !prev.is_favorite } : null)
+    // 异步更新服务器
     await supabase
       .from('articles')
       .update({ is_favorite: !article.is_favorite })
@@ -221,7 +228,7 @@ export default function FeedClient({ userId }: { userId: string }) {
           <div className="bg-white rounded-lg shadow-sm p-4">
             <h2 className="font-bold text-lg mb-4">已关注的订阅源</h2>
             {feeds.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">暂无订阅</p>
+              <p className="text-gray-600 text-center py-8">暂无订阅</p>
             ) : (
               <div className="space-y-3">
                 {feeds.map((feed) => (
@@ -233,7 +240,7 @@ export default function FeedClient({ userId }: { userId: string }) {
                     />
                     <div className="flex-1">
                       <h3 className="font-medium">{feed.name}</h3>
-                      <p className="text-gray-500 text-sm">@{feed.twitter_handle}</p>
+                      <p className="text-gray-600 text-sm">@{feed.twitter_handle}</p>
                     </div>
                     <button
                       onClick={() => deleteFeed(feed.id)}
@@ -250,14 +257,17 @@ export default function FeedClient({ userId }: { userId: string }) {
       ) : (
         <main className="max-w-2xl mx-auto px-4 py-2 space-y-2">
           {loading ? (
-            <div className="text-center py-8 text-gray-500">加载中...</div>
+            <div className="text-center py-8 text-gray-600">加载中...</div>
           ) : articles.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">暂无内容</div>
+            <div className="text-center py-8 text-gray-600">暂无内容</div>
           ) : (
             articles.map((article) => (
               <div
                 key={article.id}
-                onClick={() => setSelectedArticle(article)}
+                onClick={() => {
+                  setSelectedArticle(article)
+                  setSelectedArticleLocal({ is_read: article.is_read, is_favorite: article.is_favorite })
+                }}
                 className={`bg-white rounded-lg p-4 shadow-sm cursor-pointer hover:shadow-md transition ${
                   !article.is_read ? 'border-l-4 border-blue-500' : ''
                 }`}
@@ -271,12 +281,12 @@ export default function FeedClient({ userId }: { userId: string }) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-medium text-sm">{article.feed?.name}</span>
-                      <span className="text-gray-400 text-xs">
+                      <span className="text-gray-600 text-xs">
                         {new Date(article.published_at).toLocaleDateString('zh-CN')}
                       </span>
                     </div>
                     <h3 className="font-medium text-gray-900 line-clamp-2">{article.title}</h3>
-                    <p className="text-gray-500 text-sm mt-1 line-clamp-2">
+                    <p className="text-gray-600 text-sm mt-1 line-clamp-2">
                       {article.content_raw?.slice(0, 150)}...
                     </p>
                   </div>
@@ -350,16 +360,16 @@ export default function FeedClient({ userId }: { userId: string }) {
                   </button>
                 )}
                 <button
-                  onClick={() => toggleRead(selectedArticle)}
+                  onClick={() => toggleRead(selectedArticle!)}
                   className="p-2 hover:bg-gray-100 rounded-lg"
                 >
-                  <Check size={20} className={selectedArticle.is_read ? 'text-green-600' : ''} />
+                  <Check size={20} className={(selectedArticleLocal?.is_read ?? selectedArticle?.is_read) ? 'text-green-600' : ''} />
                 </button>
                 <button
-                  onClick={() => toggleFavorite(selectedArticle)}
+                  onClick={() => toggleFavorite(selectedArticle!)}
                   className="p-2 hover:bg-gray-100 rounded-lg"
                 >
-                  <Star size={20} className={selectedArticle.is_favorite ? 'text-yellow-500 fill-yellow-500' : ''} />
+                  <Star size={20} className={(selectedArticleLocal?.is_favorite ?? selectedArticle?.is_favorite) ? 'text-yellow-500 fill-yellow-500' : ''} />
                 </button>
               </div>
             </div>
@@ -374,7 +384,7 @@ export default function FeedClient({ userId }: { userId: string }) {
                 />
                 <div>
                   <h2 className="font-bold">{selectedArticle.feed?.name}</h2>
-                  <p className="text-gray-500 text-sm">
+                  <p className="text-gray-600 text-sm">
                     @{selectedArticle.feed?.twitter_handle} · {new Date(selectedArticle.published_at).toLocaleString('zh-CN')}
                   </p>
                 </div>
@@ -391,7 +401,7 @@ export default function FeedClient({ userId }: { userId: string }) {
                         <div key={i}>
                           <p className="text-gray-900 leading-relaxed">{para}</p>
                           {selectedArticle.content_zh && selectedArticle.content_zh.split('\n\n')[i] && (
-                            <p className="text-gray-500 leading-relaxed mt-2 italic">
+                            <p className="text-gray-600 leading-relaxed mt-2 italic">
                               {selectedArticle.content_zh.split('\n\n')[i]}
                             </p>
                           )}
@@ -400,7 +410,7 @@ export default function FeedClient({ userId }: { userId: string }) {
                     </div>
                   </>
                 ) : (
-                  <p className="text-gray-500">暂无内容</p>
+                  <p className="text-gray-600">暂无内容</p>
                 )}
               </div>
 
