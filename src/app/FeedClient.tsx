@@ -164,7 +164,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold">AI RSS</h1>
-            <span className="text-xs text-gray-700">02210815</span>
+            <span className="text-xs text-gray-900">02210815</span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -195,7 +195,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <button
           onClick={() => setFilter('all')}
           className={`px-4 py-1.5 rounded-full text-sm ${
-            filter === 'all' ? 'bg-blue-600 text-white' : 'bg-white text-gray-800'
+            filter === 'all' ? 'bg-blue-600 text-white' : 'bg-white text-gray-900'
           }`}
         >
           全部
@@ -203,7 +203,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <button
           onClick={() => setFilter('unread')}
           className={`px-4 py-1.5 rounded-full text-sm ${
-            filter === 'unread' ? 'bg-blue-600 text-white' : 'bg-white text-gray-800'
+            filter === 'unread' ? 'bg-blue-600 text-white' : 'bg-white text-gray-900'
           }`}
         >
           未读
@@ -211,7 +211,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <button
           onClick={() => setFilter('favorite')}
           className={`px-4 py-1.5 rounded-full text-sm ${
-            filter === 'favorite' ? 'bg-blue-600 text-white' : 'bg-white text-gray-800'
+            filter === 'favorite' ? 'bg-blue-600 text-white' : 'bg-white text-gray-900'
           }`}
         >
           收藏
@@ -219,7 +219,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <button
           onClick={() => setFilter('following')}
           className={`px-4 py-1.5 rounded-full text-sm ${
-            filter === 'following' ? 'bg-blue-600 text-white' : 'bg-white text-gray-800'
+            filter === 'following' ? 'bg-blue-600 text-white' : 'bg-white text-gray-900'
           }`}
         >
           关注
@@ -231,7 +231,7 @@ export default function FeedClient({ userId }: { userId: string }) {
           <div className="bg-white rounded-lg shadow-sm p-4">
             <h2 className="font-bold text-lg mb-4">已关注的订阅源</h2>
             {feeds.length === 0 ? (
-              <p className="text-gray-800 text-center py-8">暂无订阅</p>
+              <p className="text-gray-900 text-center py-8">暂无订阅</p>
             ) : (
               <div className="space-y-3">
                 {feeds.map((feed) => (
@@ -243,7 +243,7 @@ export default function FeedClient({ userId }: { userId: string }) {
                     />
                     <div className="flex-1">
                       <h3 className="font-medium">{feed.name}</h3>
-                      <p className="text-gray-800 text-sm">@{feed.twitter_handle}</p>
+                      <p className="text-gray-900 text-sm">@{feed.twitter_handle}</p>
                     </div>
                     <button
                       onClick={() => deleteFeed(feed.id)}
@@ -260,9 +260,9 @@ export default function FeedClient({ userId }: { userId: string }) {
       ) : (
         <main className="max-w-2xl mx-auto px-4 py-2 space-y-2">
           {loading ? (
-            <div className="text-center py-8 text-gray-800">加载中...</div>
+            <div className="text-center py-8 text-gray-900">加载中...</div>
           ) : articles.length === 0 ? (
-            <div className="text-center py-8 text-gray-800">暂无内容</div>
+            <div className="text-center py-8 text-gray-900">暂无内容</div>
           ) : (
             articles.map((article) => (
               <div
@@ -284,12 +284,12 @@ export default function FeedClient({ userId }: { userId: string }) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-medium text-sm">{article.feed?.name}</span>
-                      <span className="text-gray-800 text-xs">
+                      <span className="text-gray-900 text-xs">
                         {new Date(article.published_at).toLocaleDateString('zh-CN')}
                       </span>
                     </div>
                     <h3 className="font-medium text-gray-900 line-clamp-2">{article.title}</h3>
-                    <p className="text-gray-800 text-sm mt-1 line-clamp-2">
+                    <p className="text-gray-900 text-sm mt-1 line-clamp-2">
                       {article.content_raw?.slice(0, 150)}...
                     </p>
                   </div>
@@ -309,19 +309,19 @@ export default function FeedClient({ userId }: { userId: string }) {
               placeholder="名称（如：Hacker News）"
               value={newFeed.name}
               onChange={(e) => setNewFeed({ ...newFeed, name: e.target.value })}
-              className="w-full border rounded-lg px-4 py-2 mb-3"
+              className="w-full border rounded-lg px-4 py-2 mb-3 placeholder:text-gray-500"
             />
             <input
               placeholder="RSS 地址（如：https://hnrss.org/best）"
               value={newFeed.rss_url}
               onChange={(e) => setNewFeed({ ...newFeed, rss_url: e.target.value })}
-              className="w-full border rounded-lg px-4 py-2 mb-3"
+              className="w-full border rounded-lg px-4 py-2 mb-3 placeholder:text-gray-500"
             />
             <input
               placeholder="Twitter handle（可选，不填则用名称）"
               value={newFeed.twitter_handle}
               onChange={(e) => setNewFeed({ ...newFeed, twitter_handle: e.target.value })}
-              className="w-full border rounded-lg px-4 py-2 mb-4"
+              className="w-full border rounded-lg px-4 py-2 mb-4 placeholder:text-gray-500"
             />
             <div className="flex gap-2">
               <button
@@ -387,7 +387,7 @@ export default function FeedClient({ userId }: { userId: string }) {
                 />
                 <div>
                   <h2 className="font-bold">{selectedArticle.feed?.name}</h2>
-                  <p className="text-gray-800 text-sm">
+                  <p className="text-gray-900 text-sm">
                     @{selectedArticle.feed?.twitter_handle} · {new Date(selectedArticle.published_at).toLocaleString('zh-CN')}
                   </p>
                 </div>
@@ -404,7 +404,7 @@ export default function FeedClient({ userId }: { userId: string }) {
                         <div key={i}>
                           <p className="text-gray-900 leading-relaxed">{para}</p>
                           {selectedArticle.content_zh && selectedArticle.content_zh.split('\n\n')[i] && (
-                            <p className="text-gray-800 leading-relaxed mt-2 italic">
+                            <p className="text-gray-900 leading-relaxed mt-2 italic">
                               {selectedArticle.content_zh.split('\n\n')[i]}
                             </p>
                           )}
@@ -413,7 +413,7 @@ export default function FeedClient({ userId }: { userId: string }) {
                     </div>
                   </>
                 ) : (
-                  <p className="text-gray-800">暂无内容</p>
+                  <p className="text-gray-900">暂无内容</p>
                 )}
               </div>
 

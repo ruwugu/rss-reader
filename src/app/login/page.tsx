@@ -39,11 +39,11 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
         <h1 className="text-2xl font-bold text-center mb-2">AI RSS Reader</h1>
-        <p className="text-gray-500 text-center mb-8">AI 资讯一手掌握</p>
+        <p className="text-gray-800 text-center mb-8">AI 资讯一手掌握</p>
 
         <form onSubmit={handleAuth} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1">邮箱</label>
             <input
               type="email"
               value={email}
@@ -53,7 +53,7 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">密码</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1">密码</label>
             <input
               type="password"
               value={password}
@@ -76,7 +76,7 @@ export default function LoginPage() {
           <p className="mt-4 text-center text-sm text-blue-600">{message}</p>
         )}
 
-        <p className="mt-6 text-center text-sm text-gray-600">
+        <p className="mt-6 text-center text-sm text-gray-800">
           {isSignUp ? '已有账号？' : '没有账号？'}
           <button
             onClick={() => setIsSignUp(!isSignUp)}
