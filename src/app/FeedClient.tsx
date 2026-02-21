@@ -164,7 +164,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-900">02210836</span>
+            <span className="text-xs text-gray-900">02210838</span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -283,7 +283,7 @@ export default function FeedClient({ userId }: { userId: string }) {
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-sm">{article.feed?.name}</span>
+                      <span className="font-medium text-sm text-gray-900">{article.feed?.name}</span>
                       <span className="text-gray-900 text-xs">
                         {new Date(article.published_at).toLocaleDateString('zh-CN')}
                       </span>
