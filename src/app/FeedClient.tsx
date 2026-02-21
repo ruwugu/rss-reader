@@ -162,7 +162,10 @@ export default function FeedClient({ userId }: { userId: string }) {
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-          <h1 className="text-lg font-bold">AI RSS</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-bold">AI RSS</h1>
+            <span className="text-xs text-gray-400">02210815</span>
+          </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowAddFeed(true)}
