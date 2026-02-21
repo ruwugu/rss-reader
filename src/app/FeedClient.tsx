@@ -61,27 +61,41 @@ export default function FeedClient({ userId }: { userId: string }) {
   useEffect(() => { loadData() }, [filter])
 
   const loadData = async () => {
-    setLoading(true)
-    const { data: feedsData } = await supabase.from('feeds').select('*').eq('user_id', userId).eq('is_active', true)
-    if (feedsData) setFeeds(feedsData)
-    
-    // 只获取用户开启的订阅源的文章
-    const activeFeedIds = feedsData?.map(f => f.id) || []
-    let query = supabase.from('articles').select('*, feed:feeds(*)').eq('user_id', userId).in('feed_id', activeFeedIds).order('published_at', { ascending: false }).limit(50)
-    if (filter === 'unread') query = query.eq('is_read', false)
-    else if (filter === 'favorite') query = query.eq('is_favorite', true)
-    
-    const { data: articlesData } = await query
-    if (articlesData) setArticles(articlesData as any)
-    setLoading(false)
+    try {
+      setLoading(true)
+      const { data: feedsData } = await supabase.from('feeds').select('*').eq('user_id', userId).eq('is_active', true)
+      if (feedsData) setFeeds(feedsData)
+      
+      // 只获取用户开启的订阅源的文章
+      const activeFeedIds = feedsData?.map(f => f.id) || []
+      if (activeFeedIds.length === 0) {
+        setArticles([])
+        return
+      }
+      
+      let query = supabase.from('articles').select('*, feed:feeds(*)').eq('user_id', userId).in('feed_id', activeFeedIds).order('published_at', { ascending: false }).limit(50)
+      if (filter === 'unread') query = query.eq('is_read', false)
+      else if (filter === 'favorite') query = query.eq('is_favorite', true)
+      
+      const { data: articlesData } = await query
+      if (articlesData) setArticles(articlesData as any)
+    } catch (err) {
+      console.error('Load data error:', err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleSync = async () => {
     setSyncing(true)
     setLoading(true)
     try {
-      await fetch('/api/sync', { method: 'POST' })
+      const res = await fetch('/api/sync', { method: 'POST' })
+      const result = await res.json()
+      console.log('Sync result:', result)
       await loadData()
+    } catch (err) {
+      console.error('Sync error:', err)
     } finally {
       setSyncing(false)
       setLoading(false)
@@ -151,7 +165,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-900">02212300</span>
+            <span className="text-xs text-gray-900">02212315</span>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowManageFeed(true)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-900"><Plus size={20} /></button>
