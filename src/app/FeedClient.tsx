@@ -164,25 +164,25 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold">AI RSS</h1>
-            <span className="text-xs text-gray-900">02210828</span>
+            <span className="text-xs text-gray-900">02210833</span>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowAddFeed(true)}
-              className="p-2 hover:bg-gray-100 rounded-lg"
+              className="p-2 hover:bg-gray-100 rounded-lg text-gray-900"
             >
               <Plus size={20} />
             </button>
             <button
               onClick={handleSync}
               disabled={syncing}
-              className="p-2 hover:bg-gray-100 rounded-lg"
+              className="p-2 hover:bg-gray-100 rounded-lg text-gray-900"
             >
               <RefreshCw size={20} className={syncing ? 'animate-spin' : ''} />
             </button>
             <button
               onClick={handleSignOut}
-              className="p-2 hover:bg-gray-100 rounded-lg"
+              className="p-2 hover:bg-gray-100 rounded-lg text-gray-900"
             >
               <LogOut size={20} />
             </button>
@@ -242,7 +242,7 @@ export default function FeedClient({ userId }: { userId: string }) {
                       className="w-10 h-10 rounded-full"
                     />
                     <div className="flex-1">
-                      <h3 className="font-medium">{feed.name}</h3>
+                      <h3 className="font-medium text-gray-900">{feed.name}</h3>
                       <p className="text-gray-900 text-sm">@{feed.twitter_handle}</p>
                     </div>
                     <button
