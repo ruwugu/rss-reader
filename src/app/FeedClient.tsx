@@ -164,7 +164,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold">AI RSS</h1>
-            <span className="text-xs text-gray-900">02210825</span>
+            <span className="text-xs text-gray-900">02210828</span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -366,13 +366,13 @@ export default function FeedClient({ userId }: { userId: string }) {
                   onClick={() => toggleRead(selectedArticle!)}
                   className="p-2 hover:bg-gray-100 rounded-lg"
                 >
-                  <Check size={20} className={(selectedArticleLocal?.is_read ?? selectedArticle?.is_read) ? 'text-green-600' : ''} />
+                  <Check size={20} className={(selectedArticleLocal?.is_read ?? selectedArticle?.is_read) ? 'text-green-600' : 'text-gray-600'} />
                 </button>
                 <button
                   onClick={() => toggleFavorite(selectedArticle!)}
                   className="p-2 hover:bg-gray-100 rounded-lg"
                 >
-                  <Star size={20} className={(selectedArticleLocal?.is_favorite ?? selectedArticle?.is_favorite) ? 'text-yellow-500 fill-yellow-500' : ''} />
+                  <Star size={20} className={(selectedArticleLocal?.is_favorite ?? selectedArticle?.is_favorite) ? 'text-yellow-500 fill-yellow-500' : 'text-gray-600'} />
                 </button>
               </div>
             </div>
