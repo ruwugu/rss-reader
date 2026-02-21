@@ -50,7 +50,6 @@ export default function FeedClient({ userId }: { userId: string }) {
   const [filter, setFilter] = useState<'all' | 'unread' | 'favorite'>('all')
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
-  const [syncProgress, setSyncProgress] = useState<string>('')
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null)
   const [selectedArticleLocal, setSelectedArticleLocal] = useState<{is_read: boolean, is_favorite: boolean, content_zh?: string} | null>(null)
   const [translatingId, setTranslatingId] = useState<string | null>(null)
@@ -90,12 +89,10 @@ export default function FeedClient({ userId }: { userId: string }) {
   const handleSync = async () => {
     setSyncing(true)
     setLoading(true)
-    setSyncProgress('正在连接...')
     try {
       const controller = new AbortController()
       const timeout = setTimeout(() => controller.abort(), 60000)
       
-      setSyncProgress('正在抓取订阅源...')
       const res = await fetch('/api/sync', { 
         method: 'POST',
         signal: controller.signal
@@ -107,25 +104,8 @@ export default function FeedClient({ userId }: { userId: string }) {
       
       router.refresh()
       await loadData()
-      
-      // 显示结果
-      if (result.newArticlesCount > 0) {
-        setSyncProgress(`抓取完成！新增 ${result.newArticlesCount} 篇文章`)
-        setTimeout(() => setSyncProgress(''), 3000)
-      } else if (result.message) {
-        setSyncProgress(result.message)
-        setTimeout(() => setSyncProgress(''), 3000)
-      } else {
-        setSyncProgress('暂无新内容')
-        setTimeout(() => setSyncProgress(''), 3000)
-      }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Sync error:', err)
-      if (err.name === 'AbortError') {
-        setSyncProgress('抓取超时，请重试')
-      } else {
-        setSyncProgress('抓取失败: ' + err.message)
-      }
     } finally {
       setSyncing(false)
       setLoading(false)
@@ -195,24 +175,16 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-900">02220015</span>
+            <span className="text-xs text-gray-900">02220018</span>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowManageFeed(true)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-900"><Plus size={20} /></button>
-            <button onClick={handleSync} disabled={syncing} className="p-2 hover:bg-gray-100 rounded-lg text-gray-900" title={syncProgress || (syncing ? '正在抓取...' : '点击刷新')}>
+            <button onClick={handleSync} disabled={syncing} className="p-2 hover:bg-gray-100 rounded-lg text-gray-900">
               <RefreshCw size={20} className={syncing ? 'animate-spin' : ''} />
             </button>
             <button onClick={handleSignOut} className="p-2 hover:bg-gray-100 rounded-lg text-gray-900"><LogOut size={20} /></button>
           </div>
         </div>
-        {syncing && (
-          <div className="max-w-2xl mx-auto px-4 pb-2">
-            <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-blue-500 rounded-full animate-pulse" style={{ width: '60%' }} />
-            </div>
-            <p className="text-xs text-gray-600 mt-1 text-center">{syncProgress || '正在抓取...'}</p>
-          </div>
-        )}
       </header>
 
       <div className="max-w-2xl mx-auto px-4 py-2 flex gap-2">
