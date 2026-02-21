@@ -203,11 +203,17 @@ export default function FeedClient({ userId }: { userId: string }) {
   // 切换订阅源开关
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const toggleFeed = async (feed: any) => {
-    const existingFeed = feeds.find((f: any) => f.rss_url === feed.url)
+    // 先查询所有 feeds（包括关闭的）
+    const { data: allFeeds } = await supabase
+      .from('feeds')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('rss_url', feed.url)
+      .single()
     
-    if (existingFeed) {
-      // 已存在，关闭（设置 is_active 为 false）
-      await supabase.from('feeds').update({ is_active: false }).eq('id', existingFeed.id)
+    if (allFeeds) {
+      // 已存在，切换状态
+      await supabase.from('feeds').update({ is_active: !allFeeds.is_active }).eq('id', allFeeds.id)
     } else {
       // 不存在，添加
       await supabase.from('feeds').insert({
@@ -219,12 +225,8 @@ export default function FeedClient({ userId }: { userId: string }) {
         is_active: true
       })
     }
-    // 强制刷新数据
-    const { data: feedsData } = await supabase
-      .from('feeds')
-      .select('*')
-      .eq('user_id', userId)
-    if (feedsData) setFeeds(feedsData)
+    // 刷新数据
+    await loadData()
   }
 
   const deleteFeed = async (feedId: string) => {
