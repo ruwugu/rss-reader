@@ -123,17 +123,19 @@ export default function FeedClient({ userId }: { userId: string }) {
 
   const handleSync = async () => {
     setSyncing(true)
-    setLoading(true)  // 显示加载状态
+    setLoading(true)
     try {
       const res = await fetch('/api/sync', { method: 'POST' })
       const result = await res.json()
       console.log('Sync result:', result)
-      // 刷新后重新加载数据
+      // 等待数据加载完成
       await loadData()
     } catch (error) {
       console.error('Sync error:', error)
+    } finally {
+      setSyncing(false)
+      setLoading(false)
     }
-    setSyncing(false)
   }
 
   const handleSignOut = async () => {
@@ -204,8 +206,8 @@ export default function FeedClient({ userId }: { userId: string }) {
     const existingFeed = feeds.find((f: any) => f.rss_url === feed.url)
     
     if (existingFeed) {
-      // 已存在，删除
-      await supabase.from('feeds').delete().eq('id', existingFeed.id)
+      // 已存在，关闭（设置 is_active 为 false）
+      await supabase.from('feeds').update({ is_active: false }).eq('id', existingFeed.id)
     } else {
       // 不存在，添加
       await supabase.from('feeds').insert({
@@ -217,7 +219,8 @@ export default function FeedClient({ userId }: { userId: string }) {
         is_active: true
       })
     }
-    loadData()
+    // 刷新数据
+    await loadData()
   }
 
   const deleteFeed = async (feedId: string) => {
@@ -232,7 +235,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-900">02210918</span>
+            <span className="text-xs text-gray-900">02210926</span>
           </div>
           <div className="flex items-center gap-2">
             <button
