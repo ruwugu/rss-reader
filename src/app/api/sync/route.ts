@@ -22,84 +22,24 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // AI 相关 RSS 订阅源
-  const RSS_SOURCES = [
-    {
-      name: 'Hacker News',
-      url: 'https://hnrss.org/best',
-      avatar: 'https://news.ycombinator.com/y18.svg'
-    },
-    {
-      name: 'Hacker News New',
-      url: 'https://hnrss.org/newest',
-      avatar: 'https://news.ycombinator.com/y18.svg'
-    },
-    {
-      name: 'TechCrunch',
-      url: 'https://techcrunch.com/feed/',
-      avatar: 'https://techcrunch.com/wp-content/uploads/2015/02/cropped-favicon-gradient.png'
-    },
-    {
-      name: 'MIT Technology Review',
-      url: 'https://www.technologyreview.com/feed/',
-      avatar: 'https://www.technologyreview.com/favicon.ico'
-    },
-    {
-      name: 'Wired',
-      url: 'https://www.wired.com/feed/rss',
-      avatar: 'https://www.wired.com/favicon.ico'
-    },
-    {
-      name: 'OpenAI Blog',
-      url: 'https://openai.com/blog/rss.xml',
-      avatar: 'https://openai.com/favicon.ico'
-    },
-    {
-      name: 'DeepLearning.AI',
-      url: 'https://www.deeplearning.ai/feed/',
-      avatar: 'https://www.deeplearning.ai/favicon.ico'
-    },
-    {
-      name: 'AI News',
-      url: 'https://AINews.com/rss',
-      avatar: 'https://AINews.com/favicon.ico'
-    }
-  ]
+  // 只获取用户已开启的订阅源进行同步
+  const { data: activeFeeds } = await supabase
+    .from('feeds')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('is_active', true)
+
+  if (!activeFeeds || activeFeeds.length === 0) {
+    return Response.json({ success: true, newArticlesCount: 0, message: '没有开启的订阅源' })
+  }
 
   const parser = new Parser()
   let newArticlesCount = 0
 
-  for (const source of RSS_SOURCES) {
+  for (const feed of activeFeeds) {
     try {
-      // 检查订阅源是否已存在
-      let { data: feed } = await supabase
-        .from('feeds')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('rss_url', source.url)
-        .single()
-
-      // 如果不存在，创建订阅源
-      if (!feed) {
-        const { data: newFeed } = await supabase
-          .from('feeds')
-          .insert({
-            user_id: user.id,
-            name: source.name,
-            twitter_handle: source.name.toLowerCase().replace(/\s+/g, '_'),
-            rss_url: source.url,
-            avatar_url: source.avatar,
-            is_active: true
-          })
-          .select()
-          .single()
-        feed = newFeed
-      }
-
-      if (!feed) continue
-
       // 拉取 RSS
-      const rss = await parser.parseURL(source.url)
+      const rss = await parser.parseURL(feed.rss_url)
       
       for (const item of rss.items || []) {
         const url = item.link || `feed-${item.guid || Math.random()}`
@@ -129,7 +69,7 @@ export async function POST(request: Request) {
         }
       }
     } catch (error) {
-      console.error(`Error fetching ${source.name}:`, error)
+      console.error(`Error fetching ${feed.name}:`, error)
     }
   }
 

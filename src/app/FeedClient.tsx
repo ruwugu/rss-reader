@@ -65,7 +65,9 @@ export default function FeedClient({ userId }: { userId: string }) {
     const { data: feedsData } = await supabase.from('feeds').select('*').eq('user_id', userId).eq('is_active', true)
     if (feedsData) setFeeds(feedsData)
     
-    let query = supabase.from('articles').select('*, feed:feeds(*)').eq('user_id', userId).order('published_at', { ascending: false }).limit(50)
+    // 只获取用户开启的订阅源的文章
+    const activeFeedIds = feedsData?.map(f => f.id) || []
+    let query = supabase.from('articles').select('*, feed:feeds(*)').eq('user_id', userId).in('feed_id', activeFeedIds).order('published_at', { ascending: false }).limit(50)
     if (filter === 'unread') query = query.eq('is_read', false)
     else if (filter === 'favorite') query = query.eq('is_favorite', true)
     
@@ -149,7 +151,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-900">02212256</span>
+            <span className="text-xs text-gray-900">02212300</span>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowManageFeed(true)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-900"><Plus size={20} /></button>
