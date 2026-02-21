@@ -54,6 +54,7 @@ export default function FeedClient({ userId }: { userId: string }) {
   const [selectedArticleLocal, setSelectedArticleLocal] = useState<{is_read: boolean, is_favorite: boolean, content_zh?: string} | null>(null)
   const [translatingId, setTranslatingId] = useState<string | null>(null)
   const [showManageFeed, setShowManageFeed] = useState(false)
+  const [togglingFeed, setTogglingFeed] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -118,13 +119,20 @@ export default function FeedClient({ userId }: { userId: string }) {
   }
 
   const toggleFeed = async (feed: typeof AVAILABLE_FEEDS[0]) => {
-    const existing = feeds.find(f => f.rss_url === feed.url)
-    if (existing) {
-      await supabase.from('feeds').update({ is_active: false }).eq('id', existing.id)
-    } else {
-      await supabase.from('feeds').insert({ user_id: userId, name: feed.name, twitter_handle: feed.twitter_handle, rss_url: feed.url, avatar_url: feed.avatar, is_active: true })
+    setTogglingFeed(feed.id)
+    try {
+      const existing = feeds.find(f => f.rss_url === feed.url)
+      if (existing) {
+        await supabase.from('feeds').update({ is_active: false }).eq('id', existing.id)
+      } else {
+        await supabase.from('feeds').insert({ user_id: userId, name: feed.name, twitter_handle: feed.twitter_handle, rss_url: feed.url, avatar_url: feed.avatar, is_active: true })
+      }
+      await loadData()
+    } catch (err) {
+      console.error('Toggle feed error:', err)
+    } finally {
+      setTogglingFeed(null)
     }
-    await loadData()
   }
 
   return (
@@ -133,7 +141,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-900">02212117</span>
+            <span className="text-xs text-gray-900">02212208</span>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowManageFeed(true)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-900"><Plus size={20} /></button>
@@ -184,7 +192,10 @@ export default function FeedClient({ userId }: { userId: string }) {
                       <h3 className="font-medium text-gray-900">{feed.name}</h3>
                       <p className="text-gray-600 text-xs">{feed.description}</p>
                     </div>
-                    <button onClick={() => toggleFeed(feed)} className={`relative w-12 h-7 rounded-full transition-colors ${isOn ? 'bg-green-500' : 'bg-gray-300'}`}>
+                    <button 
+                      onClick={() => toggleFeed(feed)} 
+                      disabled={togglingFeed === feed.id}
+                      className={`relative w-12 h-7 rounded-full transition-colors ${isOn ? 'bg-green-500' : 'bg-gray-300'} ${togglingFeed === feed.id ? 'opacity-50' : ''}`}>
                       <span className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${isOn ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
                   </div>
