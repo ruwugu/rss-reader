@@ -15,16 +15,10 @@ interface Feed {
 
 // 预定义订阅源
 const AVAILABLE_FEEDS = [
-  { id: 'hn-best', name: 'Hacker News Best', twitter_handle: 'hn_best', url: 'https://hnrss.org/best', avatar: 'https://news.ycombinator.com/y18.svg', description: 'HN最佳' },
-  { id: 'hn-new', name: 'Hacker News New', twitter_handle: 'hn_new', url: 'https://hnrss.org/newest', avatar: 'https://news.ycombinator.com/y18.svg', description: 'HN最新' },
-  { id: 'techcrunch', name: 'TechCrunch', twitter_handle: 'techcrunch', url: 'https://techcrunch.com/feed/', avatar: 'https://techcrunch.com/wp-content/uploads/2015/02/cropped-favicon-gradient.png', description: '科技新闻' },
-  { id: 'mit-tech', name: 'MIT Tech Review', twitter_handle: 'mittech', url: 'https://www.technologyreview.com/feed/', avatar: 'https://www.technologyreview.com/favicon.ico', description: 'MIT科技' },
-  { id: 'wired', name: 'Wired', twitter_handle: 'wired', url: 'https://www.wired.com/feed/rss', avatar: 'https://www.wired.com/favicon.ico', description: 'Wired科技' },
   { id: 'openai', name: 'OpenAI Blog', twitter_handle: 'openai', url: 'https://openai.com/blog/rss.xml', avatar: 'https://openai.com/favicon.ico', description: 'OpenAI官方' },
-  { id: 'deeplearning', name: 'DeepLearning.AI', twitter_handle: 'deeplearningai', url: 'https://www.deeplearning.ai/feed/', avatar: 'https://www.deeplearning.ai/favicon.ico', description: 'AI深度学习' },
   { id: 'anthropic', name: 'Anthropic', twitter_handle: 'anthropic', url: 'https://www.anthropic.com/rss/blog', avatar: 'https://www.anthropic.com/favicon.ico', description: 'Anthropic官方' },
   { id: 'google-ai', name: 'Google AI', twitter_handle: 'googleai', url: 'https://blog.google/technology/ai/rss', avatar: 'https://www.google.com/favicon.ico', description: 'Google AI' },
-  { id: 'microsoft-ai', name: 'Microsoft AI', twitter_handle: 'microsoftai', url: 'https://blogs.microsoft.com/ai/feed', avatar: 'https://blogs.microsoft.com/favicon.ico', description: 'Microsoft AI' },
+  { id: 'karpathy', name: 'Andrej Karpathy', twitter_handle: 'karpathy', url: 'https://rsshub.app/twitter/user/karpathy', avatar: 'https://pbs.twimg.com/profile_images/1594489848945246208/-KlJjV35_400x400.jpg', description: 'Karpathy X' },
 ]
 
 function decodeHtml(html: string) {
@@ -175,7 +169,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-900">02220018</span>
+            <span className="text-xs text-gray-900">02220022</span>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowManageFeed(true)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-900"><Plus size={20} /></button>
