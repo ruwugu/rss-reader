@@ -78,6 +78,7 @@ export default function FeedClient({ userId }: { userId: string }) {
   const [syncing, setSyncing] = useState(false)
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null)
   const [selectedArticleLocal, setSelectedArticleLocal] = useState<{is_read: boolean, is_favorite: boolean} | null>(null)
+  const [translatingId, setTranslatingId] = useState<string | null>(null)
   const [showAddFeed, setShowAddFeed] = useState(false)
   const [newFeed, setNewFeed] = useState({ name: '', twitter_handle: '', rss_url: '' })
   const router = useRouter()
@@ -162,6 +163,7 @@ export default function FeedClient({ userId }: { userId: string }) {
   }
 
   const translateArticle = async (articleId: string) => {
+    setTranslatingId(articleId)
     try {
       const res = await fetch('/api/translate', {
         method: 'POST',
@@ -179,6 +181,18 @@ export default function FeedClient({ userId }: { userId: string }) {
       }
     } catch (error) {
       console.error('Translate error:', error)
+    } finally {
+      setTranslatingId(null)
+    }
+  }
+
+  // 自动翻译功能
+  const handleOpenArticle = async (article: Article) => {
+    setSelectedArticle(article)
+    setSelectedArticleLocal({ is_read: article.is_read, is_favorite: article.is_favorite })
+    // 如果没有中文翻译，自动翻译
+    if (!article.content_zh) {
+      translateArticle(article.id)
     }
   }
 
@@ -210,7 +224,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-900">02210858</span>
+            <span className="text-xs text-gray-900">02210905</span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -313,10 +327,7 @@ export default function FeedClient({ userId }: { userId: string }) {
             articles.map((article) => (
               <div
                 key={article.id}
-                onClick={() => {
-                  setSelectedArticle(article)
-                  setSelectedArticleLocal({ is_read: article.is_read, is_favorite: article.is_favorite })
-                }}
+                onClick={() => handleOpenArticle(article)}
                 className={`bg-white rounded-lg p-4 shadow-sm cursor-pointer hover:shadow-md transition ${
                   !article.is_read ? 'border-l-4 border-blue-500' : ''
                 }`}
@@ -400,7 +411,12 @@ export default function FeedClient({ userId }: { userId: string }) {
                 ← 返回
               </button>
               <div className="flex gap-2">
-                {!selectedArticle.content_zh && (
+                {translatingId === selectedArticle?.id ? (
+                  <div className="px-3 py-1 text-sm bg-blue-100 text-blue-600 rounded-lg flex items-center gap-1">
+                    <span className="animate-spin">⟳</span>
+                    翻译中
+                  </div>
+                ) : !selectedArticle.content_zh && (
                   <button
                     onClick={() => translateArticle(selectedArticle.id)}
                     className="px-3 py-1 text-sm bg-blue-100 text-blue-600 rounded-lg"
