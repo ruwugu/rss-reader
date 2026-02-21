@@ -77,7 +77,7 @@ export default function FeedClient({ userId }: { userId: string }) {
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null)
-  const [selectedArticleLocal, setSelectedArticleLocal] = useState<{is_read: boolean, is_favorite: boolean} | null>(null)
+  const [selectedArticleLocal, setSelectedArticleLocal] = useState<{is_read: boolean, is_favorite: boolean, content_zh?: string} | null>(null)
   const [translatingId, setTranslatingId] = useState<string | null>(null)
   const [showAddFeed, setShowAddFeed] = useState(false)
   const [newFeed, setNewFeed] = useState({ name: '', twitter_handle: '', rss_url: '' })
@@ -172,12 +172,9 @@ export default function FeedClient({ userId }: { userId: string }) {
       })
       const result = await res.json()
       if (result.translated) {
-        // 更新当前选中的文章
-        if (selectedArticle && selectedArticle.id === articleId) {
-          setSelectedArticle({ ...selectedArticle, content_zh: result.translated })
-        }
-        // 刷新列表
-        loadData()
+        // 更新当前选中的文章和本地状态
+        setSelectedArticle(prev => prev ? { ...prev, content_zh: result.translated } : null)
+        setSelectedArticleLocal(prev => prev ? { ...prev, content_zh: result.translated } : null)
       }
     } catch (error) {
       console.error('Translate error:', error)
@@ -189,7 +186,11 @@ export default function FeedClient({ userId }: { userId: string }) {
   // 自动翻译功能
   const handleOpenArticle = async (article: Article) => {
     setSelectedArticle(article)
-    setSelectedArticleLocal({ is_read: article.is_read, is_favorite: article.is_favorite })
+    setSelectedArticleLocal({ 
+      is_read: article.is_read, 
+      is_favorite: article.is_favorite,
+      content_zh: article.content_zh 
+    })
     // 如果没有中文翻译，自动翻译
     if (!article.content_zh) {
       translateArticle(article.id)
@@ -224,7 +225,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-900">02210905</span>
+            <span className="text-xs text-gray-900">02210910</span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -416,7 +417,7 @@ export default function FeedClient({ userId }: { userId: string }) {
                     <span className="animate-spin">⟳</span>
                     翻译中
                   </div>
-                ) : !selectedArticle.content_zh && (
+                ) : !(selectedArticleLocal?.content_zh || selectedArticle.content_zh) && (
                   <button
                     onClick={() => translateArticle(selectedArticle.id)}
                     className="px-3 py-1 text-sm bg-blue-100 text-blue-600 rounded-lg"
@@ -465,9 +466,9 @@ export default function FeedClient({ userId }: { userId: string }) {
                       {decodeHtml(selectedArticle.content_raw).split('\n\n').map((para: string, i: number) => (
                         <div key={i}>
                           <p className="text-gray-900 leading-relaxed">{para}</p>
-                          {selectedArticle.content_zh && decodeHtml(selectedArticle.content_zh).split('\n\n')[i] && (
+                          {(selectedArticleLocal?.content_zh || selectedArticle.content_zh) && decodeHtml(selectedArticleLocal?.content_zh || selectedArticle.content_zh || '').split('\n\n')[i] && (
                             <p className="text-gray-900 leading-relaxed mt-2 italic">
-                              {decodeHtml(selectedArticle.content_zh).split('\n\n')[i]}
+                              {decodeHtml(selectedArticleLocal?.content_zh || selectedArticle.content_zh || '').split('\n\n')[i]}
                             </p>
                           )}
                         </div>
