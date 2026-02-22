@@ -168,17 +168,39 @@ export default function FeedClient({ userId }: { userId: string }) {
         const result = await supabase.from('feeds').update({ is_active: false }).eq('id', existing.id)
         error = result.error
       } else {
-        // 订阅：使用固定的 feed ID 以关联到系统抓取的文章
-        const result = await supabase.from('feeds').insert({ 
-          user_id: userId, 
-          id: feed.id, // 使用与系统订阅源相同的 ID，这样可以看到系统抓取的文章
-          name: feed.name, 
-          twitter_handle: feed.twitter_handle, 
-          rss_url: feed.url, 
-          avatar_url: feed.avatar, 
-          is_active: true 
-        })
-        error = result.error
+        // 订阅：先检查系统是否已有这个 feed
+        const { data: systemFeed } = await supabase
+          .from('feeds')
+          .select('id')
+          .eq('id', feed.id)
+          .is('user_id', null)
+          .single()
+        
+        if (systemFeed) {
+          // 系统已有，创建用户的订阅记录（用不同ID或upsert）
+          const result = await supabase.from('feeds').upsert({ 
+            user_id: userId, 
+            id: `${feed.id}-${userId}`, // 用复合ID避免冲突
+            name: feed.name, 
+            twitter_handle: feed.twitter_handle, 
+            rss_url: feed.url, 
+            avatar_url: feed.avatar, 
+            is_active: true 
+          }, { onConflict: 'id' })
+          error = result.error
+        } else {
+          // 系统没有，直接创建
+          const result = await supabase.from('feeds').insert({ 
+            user_id: userId, 
+            id: feed.id,
+            name: feed.name, 
+            twitter_handle: feed.twitter_handle, 
+            rss_url: feed.url, 
+            avatar_url: feed.avatar, 
+            is_active: true 
+          })
+          error = result.error
+        }
       }
       if (error) {
         console.error('Supabase error:', error)
@@ -199,7 +221,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-500">02221503</span>
+            <span className="text-xs text-gray-500">02221507</span>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowManageFeed(true)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-900"><Plus size={20} /></button>
