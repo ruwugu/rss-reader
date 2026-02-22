@@ -66,27 +66,34 @@ export default function FeedClient({ userId }: { userId: string }) {
     try {
       setLoading(true)
       
-      // 获取用户的订阅源
+      // 获取用户的订阅源（通过 rss_url 匹配系统 feeds）
       const { data: userFeeds } = await supabase
         .from('feeds')
         .select('*')
         .eq('user_id', userId)
         .eq('is_active', true)
       
-      // 获取系统预设的订阅源
-      const { data: systemFeeds } = await supabase
-        .from('feeds')
-        .select('*')
-        .is('user_id', null)
-        .eq('is_active', true)
+      // 获取用户订阅的 rss_url
+      const userRssUrls = (userFeeds || []).map(f => f.rss_url)
       
-      // 合并用户订阅和系统订阅
-      const allFeeds = [...(userFeeds || []), ...(systemFeeds || [])]
+      // 如果用户没有订阅，获取所有系统 feeds 作为默认展示
+      let allFeeds = userFeeds || []
+      let feedIdsToQuery: string[] = []
+      
+      if (userRssUrls.length > 0) {
+        // 查询这些 rss_url 对应的所有 feeds（包括系统的）
+        const { data: matchedFeeds } = await supabase
+          .from('feeds')
+          .select('*')
+          .in('rss_url', userRssUrls)
+        
+        allFeeds = matchedFeeds || []
+        feedIdsToQuery = allFeeds.map(f => f.id)
+      }
+      
       setFeeds(allFeeds)
       
-      // 获取订阅的 feed IDs
-      const activeFeedIds = allFeeds.map(f => f.id)
-      if (activeFeedIds.length === 0) {
+      if (feedIdsToQuery.length === 0) {
         setArticles([])
         return
       }
@@ -95,7 +102,7 @@ export default function FeedClient({ userId }: { userId: string }) {
       let query = supabase
         .from('articles')
         .select('*, feed:feeds(*)')
-        .in('feed_id', activeFeedIds)
+        .in('feed_id', feedIdsToQuery)
         .order('published_at', { ascending: false })
         .limit(50)
       
@@ -212,7 +219,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-500">02221539</span>
+            <span className="text-xs text-gray-500">02221735</span>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowManageFeed(true)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-900"><Plus size={20} /></button>
