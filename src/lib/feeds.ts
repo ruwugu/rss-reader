@@ -87,14 +87,11 @@ export const TWITTER_FEEDS = [
     id: 'ylecun',
     name: 'Yann LeCun',
     twitter_handle: 'ylecun',
-    url: `${TWITTER_RSSHUB}/user/ylecun',
+    url: `${TWITTER_RSSHUB}/user/ylecun`,
     avatar: 'https://pbs.twimg.com/profile_images/875446874504925184/I7hHFAk_.jpg',
     description: 'NYU, Meta AI'
   }
 ]
-
-// 合并所有订阅源
-export const ALL_FEEDS = [...AVAILABLE_FEEDS, ...TWITTER_FEEDS]
 
 // 预定义的 AI 相关 RSS 订阅源
 export const AVAILABLE_FEEDS = [
@@ -179,3 +176,6 @@ export const AVAILABLE_FEEDS = [
     description: 'Microsoft AI 博客'
   }
 ]
+
+// 合并所有订阅源
+export const ALL_FEEDS = [...AVAILABLE_FEEDS, ...TWITTER_FEEDS]

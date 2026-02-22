@@ -26,7 +26,7 @@ const TWITTER_FEEDS = [
   { id: 'twitter-earlyexit', name: 'Jiayi', twitter_handle: 'earlyexit', url: `${TWITTER_RSSHUB}/user/earlyexit`, avatar: 'https://pbs.twimg.com/profile_images/1695567553419460608/lz8m2OQd.jpg', description: 'AI researcher' },
   { id: 'twitter-soumith', name: 'Soumith Chintala', twitter_handle: 'soumithchintala', url: `${TWITTER_RSSHUB}/user/soumithchintala`, avatar: 'https://pbs.twimg.com/profile_images/1163467487/soumith_200x200.jpg', description: 'PyTorch' },
   { id: 'twitter-ian', name: 'Ian Goodfellow', twitter_handle: 'goodfellow_ian', url: `${TWITTER_RSSHUB}/user/goodfellow_ian`, avatar: 'https://pbs.twimg.com/profile_images/764782156692EREse/3j0Mf2k_.jpg', description: 'GANs creator' },
-  { id: 'twitter-yann', name: 'Yann LeCun', twitter_handle: 'ylecun', url: `${TWITTER_RSSHUB}/user/ylecun', avatar: 'https://pbs.twimg.com/profile_images/875446874504925184/I7hHFAk_.jpg', description: 'NYU, Meta AI' },
+  { id: 'twitter-yann', name: 'Yann LeCun', twitter_handle: 'ylecun', url: `${TWITTER_RSSHUB}/user/ylecun`, avatar: 'https://pbs.twimg.com/profile_images/875446874504925184/I7hHFAk_.jpg', description: 'NYU, Meta AI' },
 ]
 
 // 预定义订阅源
