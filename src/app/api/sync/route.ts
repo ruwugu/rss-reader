@@ -57,6 +57,14 @@ async function fetchRSSWithProxy(url: string): Promise<string> {
   throw new Error('All fetch methods failed')
 }
 
+// 预设的 RSS 订阅源列表
+const DEFAULT_FEEDS = [
+  { id: 'twitter-karpathy', name: 'Andrej Karpathy', twitter_handle: 'karpathy', url: 'https://rsshub.pseudoyu.com/twitter/user/karpathy', avatar: 'https://pbs.twimg.com/profile_images/1296667294148382721/9Pr6XrPB.jpg' },
+  { id: 'twitter-sama', name: 'Sam Altman', twitter_handle: 'sama', url: 'https://rsshub.pseudoyu.com/twitter/user/sama', avatar: 'https://pbs.twimg.com/profile_images/1904933748015255552/k43GMz63.jpg' },
+  { id: 'twitter-sagacity', name: '池建强', twitter_handle: 'sagacity', url: 'https://rsshub.pseudoyu.com/twitter/user/sagacity', avatar: 'https://pbs.twimg.com/profile_images/837956718/_____2010-04-20___10.16.37_400x400.png' },
+]
+
+// 系统自动同步所有预设订阅源（不区分用户，公共缓存）
 export async function POST(request: Request) {
   const cookieStore = await cookies()
   
@@ -72,97 +80,104 @@ export async function POST(request: Request) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const { data: activeFeeds } = await supabase
-    .from('feeds')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('is_active', true)
-
-  if (!activeFeeds || activeFeeds.length === 0) {
-    return Response.json({ success: true, newArticlesCount: 0, message: '没有开启的订阅源' })
-  }
-
   const parser = new Parser({ timeout: 5000 })
   let newArticlesCount = 0
   let feedsProcessed = 0
   const errors: string[] = []
 
-  try {
-    for (const feed of activeFeeds) {
-      try {
-        const { data: latestArticle } = await supabase
-          .from('articles')
-          .select('published_at')
-          .eq('feed_id', feed.id)
-          .eq('user_id', user.id)
-          .order('published_at', { ascending: false })
-          .limit(1)
-          .single()
-        
-        const lastSyncTime = latestArticle?.published_at ? new Date(latestArticle.published_at).getTime() : 0
-        
-        // 使用代理获取 RSS
-        let rssText: string
-        try {
-          rssText = await fetchRSSWithProxy(feed.rss_url)
-        } catch (e) {
-          console.error(`Failed to fetch ${feed.name}:`, e)
-          errors.push(`${feed.name}: ${e}`)
-          continue
-        }
-        
-        const rss = await parser.parseString(rssText)
-        
-        if (!rss.items) continue
-        
-        let feedNewCount = 0
-        for (const item of rss.items) {
-          const itemTime = item.pubDate ? new Date(item.pubDate).getTime() : 0
-          
-          if (itemTime <= lastSyncTime) continue
-          
-          const url = item.link || `feed-${item.guid || Math.random()}`
-          
-          const { data: existing } = await supabase
-            .from('articles')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('url', url)
-            .single()
-
-          if (!existing) {
-            const content = item.content || item.contentSnippet || item.summary || ''
-            const title = item.title || '无标题'
-            const publishedAt = item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString()
-
-            await supabase.from('articles').insert({
-              feed_id: feed.id,
-              user_id: user.id,
-              title,
-              content_raw: content,
-              url,
-              published_at: publishedAt,
-            })
-            newArticlesCount++
-            feedNewCount++
-          }
-        }
-        
-        feedsProcessed++
-        console.log(`Feed ${feed.name}: ${feedNewCount} new articles`)
-      } catch (feedError) {
-        console.error(`Error fetching ${feed.name}:`, feedError)
-        errors.push(`${feed.name}: ${feedError}`)
-      }
+  // 1. 确保所有预设订阅源存在于 feeds 表中
+  for (const feedInfo of DEFAULT_FEEDS) {
+    const { data: existingFeed } = await supabase
+      .from('feeds')
+      .select('id')
+      .eq('id', feedInfo.id)
+      .single()
+    
+    if (!existingFeed) {
+      // 创建预设订阅源（user_id 为空表示系统预设），使用 upsert 避免冲突
+      await supabase.from('feeds').upsert({
+        id: feedInfo.id,
+        user_id: null, // 系统预设，不属于任何用户
+        name: feedInfo.name,
+        twitter_handle: feedInfo.twitter_handle,
+        rss_url: feedInfo.url,
+        avatar_url: feedInfo.avatar,
+        is_active: true,
+        is_system: true, // 标记为系统预设
+      }, { onConflict: 'id' })
     }
-  } catch (error) {
-    console.error('Sync error:', error)
-    return Response.json({ success: false, error: String(error), errors }, { status: 500 })
+  }
+
+  // 2. 抓取所有预设订阅源的文章
+  for (const feedInfo of DEFAULT_FEEDS) {
+    try {
+      // 获取该订阅源最近一次抓取的文章时间
+      const { data: latestArticle } = await supabase
+        .from('articles')
+        .select('published_at')
+        .eq('feed_id', feedInfo.id)
+        .order('published_at', { ascending: false })
+        .limit(1)
+        .single()
+      
+      const lastSyncTime = latestArticle?.published_at ? new Date(latestArticle.published_at).getTime() : 0
+      
+      // 使用代理获取 RSS
+      let rssText: string
+      try {
+        rssText = await fetchRSSWithProxy(feedInfo.url)
+      } catch (e) {
+        console.error(`Failed to fetch ${feedInfo.name}:`, e)
+        errors.push(`${feedInfo.name}: ${e}`)
+        continue
+      }
+      
+      const rss = await parser.parseString(rssText)
+      
+      if (!rss.items) continue
+      
+      let feedNewCount = 0
+      for (const item of rss.items) {
+        const itemTime = item.pubDate ? new Date(item.pubDate).getTime() : 0
+        
+        // 只抓取最近一次抓取之后的新内容
+        if (itemTime <= lastSyncTime) continue
+        
+        const url = item.link || `feed-${item.guid || Math.random()}`
+        
+        // 检查是否已存在（不区分用户，所有用户共享）
+        const { data: existing } = await supabase
+          .from('articles')
+          .select('id')
+          .eq('feed_id', feedInfo.id)
+          .eq('url', url)
+          .single()
+
+        if (!existing) {
+          const content = item.content || item.contentSnippet || item.summary || ''
+          const title = item.title || '无标题'
+          const publishedAt = item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString()
+
+          // 插入文章（不关联特定用户，公共缓存）
+          await supabase.from('articles').insert({
+            feed_id: feedInfo.id,
+            user_id: null, // 公共文章，不属于任何用户
+            title,
+            content_raw: content,
+            url,
+            published_at: publishedAt,
+          })
+          newArticlesCount++
+          feedNewCount++
+        }
+      }
+      
+      feedsProcessed++
+      console.log(`Feed ${feedInfo.name}: ${feedNewCount} new articles`)
+    } catch (feedError) {
+      console.error(`Error fetching ${feedInfo.name}:`, feedError)
+      errors.push(`${feedInfo.name}: ${feedError}`)
+    }
   }
 
   return Response.json({ 

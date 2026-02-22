@@ -63,17 +63,30 @@ export default function FeedClient({ userId }: { userId: string }) {
   const loadData = async () => {
     try {
       setLoading(true)
-      const { data: feedsData } = await supabase.from('feeds').select('*').eq('user_id', userId).eq('is_active', true)
+      // 获取用户开启的订阅源（包括系统预设的订阅源）
+      const { data: feedsData } = await supabase
+        .from('feeds')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+      
       if (feedsData) setFeeds(feedsData)
       
-      // 只获取用户开启的订阅源的文章
+      // 获取用户订阅的 feed IDs
       const activeFeedIds = feedsData?.map(f => f.id) || []
       if (activeFeedIds.length === 0) {
         setArticles([])
         return
       }
       
-      let query = supabase.from('articles').select('*, feed:feeds(*)').eq('user_id', userId).in('feed_id', activeFeedIds).order('published_at', { ascending: false }).limit(50)
+      // 查询用户订阅的订阅源的文章（包括系统抓取的公共文章 user_id=null 和用户的个人文章）
+      let query = supabase
+        .from('articles')
+        .select('*, feed:feeds(*)')
+        .in('feed_id', activeFeedIds)
+        .order('published_at', { ascending: false })
+        .limit(50)
+      
       if (filter === 'unread') query = query.eq('is_read', false)
       else if (filter === 'favorite') query = query.eq('is_favorite', true)
       
@@ -147,13 +160,24 @@ export default function FeedClient({ userId }: { userId: string }) {
   const toggleFeed = async (feed: typeof AVAILABLE_FEEDS[0]) => {
     setTogglingFeed(feed.id)
     try {
-      const existing = feeds.find(f => f.rss_url === feed.url)
+      // 检查用户是否已经订阅了这个订阅源
+      const existing = feeds.find(f => f.id === feed.id)
       let error = null
       if (existing) {
+        // 取消订阅
         const result = await supabase.from('feeds').update({ is_active: false }).eq('id', existing.id)
         error = result.error
       } else {
-        const result = await supabase.from('feeds').insert({ user_id: userId, name: feed.name, twitter_handle: feed.twitter_handle, rss_url: feed.url, avatar_url: feed.avatar, is_active: true })
+        // 订阅：使用固定的 feed ID 以关联到系统抓取的文章
+        const result = await supabase.from('feeds').insert({ 
+          user_id: userId, 
+          id: feed.id, // 使用与系统订阅源相同的 ID，这样可以看到系统抓取的文章
+          name: feed.name, 
+          twitter_handle: feed.twitter_handle, 
+          rss_url: feed.url, 
+          avatar_url: feed.avatar, 
+          is_active: true 
+        })
         error = result.error
       }
       if (error) {
