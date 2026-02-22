@@ -26,6 +26,14 @@ export const TWITTER_FEEDS = [
     url: `${TWITTER_RSSHUB}/user/sama`,
     avatar: 'https://pbs.twimg.com/profile_images/1581800860582416384/5U7oZLJ3.jpg',
     description: 'OpenAI CEO'
+  },
+  {
+    id: 'twitter-sagacity',
+    name: 'Jim Fan',
+    twitter_handle: 'sagacity',
+    url: `${TWITTER_RSSHUB}/user/sagacity`,
+    avatar: 'https://pbs.twimg.com/profile_images/1772866881564876800/_N0S6Sda.jpg',
+    description: 'NVIDIA AI'
   }
 ]
 
