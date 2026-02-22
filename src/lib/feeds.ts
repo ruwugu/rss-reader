@@ -29,11 +29,11 @@ export const TWITTER_FEEDS = [
   },
   {
     id: 'twitter-sagacity',
-    name: 'Jim Fan',
+    name: '池建强',
     twitter_handle: 'sagacity',
     url: `${TWITTER_RSSHUB}/user/sagacity`,
     avatar: 'https://pbs.twimg.com/profile_images/1772866881564876800/_N0S6Sda.jpg',
-    description: 'NVIDIA AI'
+    description: 'AI researcher'
   }
 ]
 
