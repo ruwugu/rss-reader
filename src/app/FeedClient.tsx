@@ -65,23 +65,33 @@ export default function FeedClient({ userId }: { userId: string }) {
   const loadData = async () => {
     try {
       setLoading(true)
-      // 获取用户开启的订阅源（包括系统预设的订阅源）
-      const { data: feedsData } = await supabase
+      
+      // 获取用户的订阅源
+      const { data: userFeeds } = await supabase
         .from('feeds')
         .select('*')
         .eq('user_id', userId)
         .eq('is_active', true)
       
-      if (feedsData) setFeeds(feedsData)
+      // 获取系统预设的订阅源
+      const { data: systemFeeds } = await supabase
+        .from('feeds')
+        .select('*')
+        .is('user_id', null)
+        .eq('is_active', true)
       
-      // 获取用户订阅的 feed IDs
-      const activeFeedIds = feedsData?.map(f => f.id) || []
+      // 合并用户订阅和系统订阅
+      const allFeeds = [...(userFeeds || []), ...(systemFeeds || [])]
+      setFeeds(allFeeds)
+      
+      // 获取订阅的 feed IDs
+      const activeFeedIds = allFeeds.map(f => f.id)
       if (activeFeedIds.length === 0) {
         setArticles([])
         return
       }
       
-      // 查询用户订阅的订阅源的文章（包括系统抓取的公共文章 user_id=null 和用户的个人文章）
+      // 查询文章
       let query = supabase
         .from('articles')
         .select('*, feed:feeds(*)')
@@ -202,7 +212,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-500">02221528</span>
+            <span className="text-xs text-gray-500">02221539</span>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowManageFeed(true)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-900"><Plus size={20} /></button>
