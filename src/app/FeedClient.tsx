@@ -226,7 +226,10 @@ export default function FeedClient({ userId }: { userId: string }) {
                     <img src={feed.avatar} alt={feed.name} className="w-10 h-10 rounded-full" />
                     <div className="flex-1">
                       <h3 className="font-medium text-gray-900">{feed.name}</h3>
-                      <p className="text-gray-600 text-xs">{feed.description}</p>
+                      <p className="text-gray-600 text-xs">
+                        <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-medium">X</span>
+                        <span className="ml-1">@{feed.twitter_handle}</span>
+                      </p>
                     </div>
                     <button 
                       onClick={() => toggleFeed(feed)} 
