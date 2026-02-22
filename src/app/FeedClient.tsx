@@ -18,8 +18,8 @@ const TWITTER_RSSHUB = 'https://rsshub.pseudoyu.com/twitter'
 
 const TWITTER_FEEDS = [
   { id: 'twitter-karpathy', name: 'Andrej Karpathy', twitter_handle: 'karpathy', url: `${TWITTER_RSSHUB}/user/karpathy`, avatar: 'https://pbs.twimg.com/profile_images/1296667294148382721/9Pr6XrPB.jpg', description: 'AI researcher' },
-  { id: 'twitter-sama', name: 'Sam Altman', twitter_handle: 'sama', url: `${TWITTER_RSSHUB}/user/sama`, avatar: 'https://pbs.twimg.com/profile_images/1581800860582416384/5U7oZLJ3.jpg', description: 'OpenAI CEO' },
-  { id: 'twitter-sagacity', name: '池建强', twitter_handle: 'sagacity', url: `${TWITTER_RSSHUB}/user/sagacity`, avatar: 'https://pbs.twimg.com/profile_images/1772866881564876800/_N0S6Sda.jpg', description: 'AI researcher' },
+  { id: 'twitter-sama', name: 'Sam Altman', twitter_handle: 'sama', url: `${TWITTER_RSSHUB}/user/sama`, avatar: 'https://pbs.twimg.com/profile_images/1904933748015255552/k43GMz63.jpg', description: 'OpenAI CEO' },
+  { id: 'twitter-sagacity', name: '池建强', twitter_handle: 'sagacity', url: `${TWITTER_RSSHUB}/user/sagacity`, avatar: 'https://pbs.twimg.com/profile_images/837956718/_____2010-04-20___10.16.37_400x400.png', description: '墨问西东创始人' },
 ]
 
 // 预定义订阅源

@@ -24,7 +24,7 @@ export const TWITTER_FEEDS = [
     name: 'Sam Altman',
     twitter_handle: 'sama',
     url: `${TWITTER_RSSHUB}/user/sama`,
-    avatar: 'https://pbs.twimg.com/profile_images/1581800860582416384/5U7oZLJ3.jpg',
+    avatar: 'https://pbs.twimg.com/profile_images/1904933748015255552/k43GMz63.jpg',
     description: 'OpenAI CEO'
   },
   {
@@ -32,8 +32,8 @@ export const TWITTER_FEEDS = [
     name: '池建强',
     twitter_handle: 'sagacity',
     url: `${TWITTER_RSSHUB}/user/sagacity`,
-    avatar: 'https://pbs.twimg.com/profile_images/1772866881564876800/_N0S6Sda.jpg',
-    description: 'AI researcher'
+    avatar: 'https://pbs.twimg.com/profile_images/837956718/_____2010-04-20___10.16.37_400x400.png',
+    description: '墨问西东创始人'
   }
 ]
 
