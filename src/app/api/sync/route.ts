@@ -4,6 +4,59 @@ import Parser from 'rss-parser'
 
 export const dynamic = 'force-dynamic'
 
+// 使用客户端代理来获取 RSS（绕过 Vercel 服务器无法访问外部服务的问题）
+async function fetchRSSWithProxy(url: string): Promise<string> {
+  // 尝试多个 CORS 代理
+  const proxies = [
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  ]
+  
+  const parser = new Parser({ timeout: 15000 })
+  
+  for (const proxyUrl of proxies) {
+    try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 15000)
+      
+      const response = await fetch(proxyUrl, {
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+        }
+      })
+      
+      clearTimeout(timeout)
+      
+      if (response.ok) {
+        const text = await response.text()
+        // 验证返回的是有效的 XML
+        if (text.includes('<rss') || text.includes('<feed')) {
+          return text
+        }
+      }
+    } catch (e) {
+      console.log(`Proxy ${proxyUrl} failed:`, e)
+      continue
+    }
+  }
+  
+  // 如果代理都失败，尝试直接获取
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 15000)
+    const response = await fetch(url, { signal: controller.signal })
+    clearTimeout(timeout)
+    if (response.ok) {
+      return await response.text()
+    }
+  } catch (e) {
+    console.log(`Direct fetch failed:`, e)
+  }
+  
+  throw new Error('All fetch methods failed')
+}
+
 export async function POST(request: Request) {
   const cookieStore = await cookies()
   
@@ -24,7 +77,6 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // 只获取用户已开启的订阅源进行同步
   const { data: activeFeeds } = await supabase
     .from('feeds')
     .select('*')
@@ -38,11 +90,11 @@ export async function POST(request: Request) {
   const parser = new Parser({ timeout: 5000 })
   let newArticlesCount = 0
   let feedsProcessed = 0
+  const errors: string[] = []
 
   try {
     for (const feed of activeFeeds) {
       try {
-        // 获取该订阅源最近一次抓取的文章时间
         const { data: latestArticle } = await supabase
           .from('articles')
           .select('published_at')
@@ -54,12 +106,17 @@ export async function POST(request: Request) {
         
         const lastSyncTime = latestArticle?.published_at ? new Date(latestArticle.published_at).getTime() : 0
         
-        // 拉取 RSS，设置超时
-        const controller = new AbortController()
-        const timeout = setTimeout(() => controller.abort(), 60000)
+        // 使用代理获取 RSS
+        let rssText: string
+        try {
+          rssText = await fetchRSSWithProxy(feed.rss_url)
+        } catch (e) {
+          console.error(`Failed to fetch ${feed.name}:`, e)
+          errors.push(`${feed.name}: ${e}`)
+          continue
+        }
         
-        const rss = await parser.parseURL(feed.rss_url)
-        clearTimeout(timeout)
+        const rss = await parser.parseString(rssText)
         
         if (!rss.items) continue
         
@@ -67,12 +124,10 @@ export async function POST(request: Request) {
         for (const item of rss.items) {
           const itemTime = item.pubDate ? new Date(item.pubDate).getTime() : 0
           
-          // 只抓取最近一次抓取之后的新内容
           if (itemTime <= lastSyncTime) continue
           
           const url = item.link || `feed-${item.guid || Math.random()}`
           
-          // 检查是否已存在（双重保险：URL和时间都相同才跳过）
           const { data: existing } = await supabase
             .from('articles')
             .select('id')
@@ -102,13 +157,18 @@ export async function POST(request: Request) {
         console.log(`Feed ${feed.name}: ${feedNewCount} new articles`)
       } catch (feedError) {
         console.error(`Error fetching ${feed.name}:`, feedError)
-        // 继续处理下一个 feed
+        errors.push(`${feed.name}: ${feedError}`)
       }
     }
   } catch (error) {
     console.error('Sync error:', error)
-    return Response.json({ success: false, error: String(error) }, { status: 500 })
+    return Response.json({ success: false, error: String(error), errors }, { status: 500 })
   }
 
-  return Response.json({ success: true, newArticlesCount, feedsProcessed })
+  return Response.json({ 
+    success: true, 
+    newArticlesCount, 
+    feedsProcessed,
+    errors: errors.length > 0 ? errors : undefined 
+  })
 }
