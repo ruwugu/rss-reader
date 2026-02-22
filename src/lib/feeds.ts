@@ -7,6 +7,95 @@ export function createClient() {
   )
 }
 
+// Twitter RSS 订阅源 (使用 rsshub.pseudoyu.com)
+const TWITTER_RSSHUB = 'https://rsshub.pseudoyu.com/twitter'
+
+export const TWITTER_FEEDS = [
+  {
+    id: 'twitter-karpathy',
+    name: 'Andrej Karpathy',
+    twitter_handle: 'karpathy',
+    url: `${TWITTER_RSSHUB}/user/karpathy`,
+    avatar: 'https://pbs.twimg.com/profile_images/1296667294148382721/9Pr6XrPB.jpg',
+    description: 'AI researcher, former Tesla/OpenAI'
+  },
+  {
+    id: 'twitter-elonmusk',
+    name: 'Elon Musk',
+    twitter_handle: 'elonmusk',
+    url: `${TWITTER_RSSHUB}/user/elonmusk`,
+    avatar: 'https://pbs.twimg.com/profile_images/1590289135619338240-p8lP4_r_.jpg',
+    description: 'Tesla, SpaceX, X'
+  },
+  {
+    id: 'twitter-sama',
+    name: 'Sam Altman',
+    twitter_handle: 'sama',
+    url: `${TWITTER_RSSHUB}/user/sama`,
+    avatar: 'https://pbs.twimg.com/profile_images/1581800860582416384/5U7oZLJ3.jpg',
+    description: 'OpenAI CEO'
+  },
+  {
+    id: 'twitter-demis',
+    name: 'Demis Hassabis',
+    twitter_handle: 'demishassabis',
+    url: `${TWITTER_RSSHUB}/user/demishassabis`,
+    avatar: 'https://pbs.twimg.com/profile_images/1553175885/demis_avatar_200x200.jpg',
+    description: 'Google DeepMind CEO'
+  },
+  {
+    id: 'twitter-jeffdean',
+    name: 'Jeff Dean',
+    twitter_handle: 'JeffDean',
+    url: `${TWITTER_RSSHUB}/user/JeffDean`,
+    avatar: 'https://pbs.twimg.com/profile_images/1221600828702249473/2d_Tx4Ag.jpg',
+    description: 'Google AI'
+  },
+  {
+    id: 'hwchase17',
+    name: 'Chase',
+    twitter_handle: 'hwchase17',
+    url: `${TWITTER_RSSHUB}/user/hwchase17`,
+    avatar: 'https://pbs.twimg.com/profile_images/1777620652245245952/lN-UrS7-.jpg',
+    description: 'AI researcher, LangChain'
+  },
+  {
+    id: 'earlyexit',
+    name: 'Jiayi',
+    twitter_handle: 'earlyexit',
+    url: `${TWITTER_RSSHUB}/user/earlyexit`,
+    avatar: 'https://pbs.twimg.com/profile_images/1695567553419460608/lz8m2OQd.jpg',
+    description: 'AI researcher'
+  },
+  {
+    id: 'soumithchintala',
+    name: 'Soumith Chintala',
+    twitter_handle: 'soumithchintala',
+    url: `${TWITTER_RSSHUB}/user/soumithchintala`,
+    avatar: 'https://pbs.twimg.com/profile_images/1163467487/soumith_200x200.jpg',
+    description: 'PyTorch'
+  },
+  {
+    id: 'goodfellow_ian',
+    name: 'Ian Goodfellow',
+    twitter_handle: 'goodfellow_ian',
+    url: `${TWITTER_RSSHUB}/user/goodfellow_ian`,
+    avatar: 'https://pbs.twimg.com/profile_images/764782156692EREse/3j0Mf2k_.jpg',
+    description: 'GANs creator'
+  },
+  {
+    id: 'ylecun',
+    name: 'Yann LeCun',
+    twitter_handle: 'ylecun',
+    url: `${TWITTER_RSSHUB}/user/ylecun',
+    avatar: 'https://pbs.twimg.com/profile_images/875446874504925184/I7hHFAk_.jpg',
+    description: 'NYU, Meta AI'
+  }
+]
+
+// 合并所有订阅源
+export const ALL_FEEDS = [...AVAILABLE_FEEDS, ...TWITTER_FEEDS]
+
 // 预定义的 AI 相关 RSS 订阅源
 export const AVAILABLE_FEEDS = [
   {
