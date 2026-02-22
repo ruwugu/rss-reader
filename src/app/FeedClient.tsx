@@ -7,10 +7,12 @@ import { Star, Check, LogOut, Plus, RefreshCw } from 'lucide-react'
 
 interface Feed {
   id: string
+  user_id: string | null
   name: string
   twitter_handle: string
   avatar_url: string
   rss_url?: string
+  is_active?: boolean
 }
 
 // Twitter RSS 订阅源 (使用 rsshub.pseudoyu.com)
@@ -160,47 +162,26 @@ export default function FeedClient({ userId }: { userId: string }) {
   const toggleFeed = async (feed: typeof AVAILABLE_FEEDS[0]) => {
     setTogglingFeed(feed.id)
     try {
-      // 检查用户是否已经订阅了这个订阅源
-      const existing = feeds.find(f => f.id === feed.id)
+      // 检查用户是否已经订阅了这个订阅源（通过 rss_url 匹配）
+      const existing = feeds.find(f => f.rss_url === feed.url && f.user_id === userId)
       let error = null
       if (existing) {
-        // 取消订阅
-        const result = await supabase.from('feeds').update({ is_active: false }).eq('id', existing.id)
+        // 取消订阅 - 直接删除用户的订阅记录
+        const result = await supabase.from('feeds').delete().eq('id', existing.id)
         error = result.error
       } else {
-        // 订阅：先检查系统是否已有这个 feed
-        const { data: systemFeed } = await supabase
-          .from('feeds')
-          .select('id')
-          .eq('id', feed.id)
-          .is('user_id', null)
-          .single()
-        
-        if (systemFeed) {
-          // 系统已有，创建用户的订阅记录（用不同ID或upsert）
-          const result = await supabase.from('feeds').upsert({ 
-            user_id: userId, 
-            id: `${feed.id}-${userId}`, // 用复合ID避免冲突
-            name: feed.name, 
-            twitter_handle: feed.twitter_handle, 
-            rss_url: feed.url, 
-            avatar_url: feed.avatar, 
-            is_active: true 
-          }, { onConflict: 'id' })
-          error = result.error
-        } else {
-          // 系统没有，直接创建
-          const result = await supabase.from('feeds').insert({ 
-            user_id: userId, 
-            id: feed.id,
-            name: feed.name, 
-            twitter_handle: feed.twitter_handle, 
-            rss_url: feed.url, 
-            avatar_url: feed.avatar, 
-            is_active: true 
-          })
-          error = result.error
-        }
+        // 订阅 - 创建用户的订阅记录，使用简单的 ID
+        const userFeedId = `${feed.id}-${userId.slice(0, 8)}`
+        const result = await supabase.from('feeds').insert({ 
+          user_id: userId, 
+          id: userFeedId,
+          name: feed.name, 
+          twitter_handle: feed.twitter_handle, 
+          rss_url: feed.url, 
+          avatar_url: feed.avatar, 
+          is_active: true 
+        })
+        error = result.error
       }
       if (error) {
         console.error('Supabase error:', error)
@@ -221,7 +202,7 @@ export default function FeedClient({ userId }: { userId: string }) {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-900">AI RSS</h1>
-            <span className="text-xs text-gray-500">02221507</span>
+            <span className="text-xs text-gray-500">02221528</span>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowManageFeed(true)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-900"><Plus size={20} /></button>
